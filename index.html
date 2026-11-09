@@ -1,0 +1,2008 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YDT Conditionals — Tam Program (İnteraktif)</title>
+<style>
+:root{
+  --bg:#f7f7f4; --paper:#ffffff; --ink:#1c1c1c; --muted:#5b5b5b;
+  --line:#e3e3dc; --accent:#2b5c86; --accent-soft:#eef4f9;
+  --good:#1e7a3e; --good-bg:#eaf6ee; --bad:#a02c2c; --bad-bg:#fbeeee;
+  --warn:#8a6d1f; --warn-bg:#fdf6e3; --code:#f0f0ea;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  color:var(--ink); background:var(--bg); line-height:1.65; font-size:16px;
+}
+.page-wrap{max-width:920px; margin:0 auto; padding:0 28px 80px}
+
+/* Global sticky progress */
+.global-progress{
+  position:sticky; top:0; z-index:100;
+  background:rgba(238,244,249,0.96);
+  backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--line);
+  padding:10px 28px;
+  margin:0 -28px 32px;
+  display:flex; align-items:center; gap:14px;
+  font-size:13.5px;
+}
+.gp-stat{flex-shrink:0; color:var(--muted)}
+.gp-stat strong{color:var(--accent)}
+.gp-track{flex:1; min-width:100px; height:6px; background:#dbe4ec;
+  border-radius:3px; overflow:hidden}
+.gp-fill{height:100%; width:0; background:var(--accent); transition:width .25s ease}
+.gp-reset-all{flex-shrink:0; background:none; border:1px solid var(--line);
+  color:var(--muted); font-size:12px; padding:4px 10px; border-radius:4px;
+  cursor:pointer; font-family:inherit}
+.gp-reset-all:hover{border-color:var(--accent); color:var(--accent)}
+
+/* Hero */
+header.hero{margin-bottom:36px; padding-top:40px}
+header.hero h1{font-size:30px; margin:0 0 8px; line-height:1.25}
+header.hero p{color:var(--muted); margin:0; font-size:15px; max-width:700px}
+
+/* TOC */
+nav.toc{
+  background:var(--paper); border:1px solid var(--line);
+  border-radius:8px; padding:18px 22px; margin:24px 0 42px;
+}
+nav.toc h2{
+  font-size:12px; text-transform:uppercase; letter-spacing:.08em;
+  color:var(--muted); margin:0 0 12px; font-weight:600;
+}
+nav.toc ol{list-style:none; padding:0; margin:0;
+  display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:4px 20px}
+nav.toc a{
+  display:block; padding:6px 0; color:var(--ink); text-decoration:none;
+  font-size:14.5px; border-bottom:1px solid transparent;
+}
+nav.toc a:hover{color:var(--accent); border-bottom-color:var(--accent)}
+
+/* Sections */
+section.part{margin-bottom:56px; scroll-margin-top:70px}
+section.part > h2{
+  font-size:22px; border-bottom:2px solid var(--accent);
+  padding-bottom:8px; margin:0 0 22px; color:var(--accent);
+}
+h3{font-size:18px; margin:32px 0 12px; color:var(--ink)}
+h4{font-size:15px; margin:22px 0 8px; color:var(--muted);
+  text-transform:uppercase; letter-spacing:.05em; font-weight:600}
+p{margin:10px 0}
+ul,ol{margin:10px 0; padding-left:22px}
+li{margin:5px 0}
+
+/* Blocks */
+.note{background:var(--warn-bg); border-left:4px solid var(--warn);
+  padding:12px 16px; border-radius:4px; margin:16px 0; font-size:15px}
+.note strong{color:var(--warn)}
+.tip{background:var(--accent-soft); border-left:4px solid var(--accent);
+  padding:12px 16px; border-radius:4px; margin:16px 0; font-size:15px}
+.tip strong{color:var(--accent)}
+.formula{background:var(--code); border-radius:5px; padding:10px 14px;
+  font-family:"SF Mono",Menlo,Consolas,monospace; font-size:14px;
+  margin:10px 0; display:inline-block; border:1px solid var(--line)}
+.example{background:var(--paper); border:1px solid var(--line);
+  border-radius:5px; padding:12px 16px; margin:8px 0}
+.example .en{font-family:Georgia,"Times New Roman",serif; font-size:16px}
+.example .tr{color:var(--muted); font-style:italic; font-size:14px; margin-top:4px}
+.example .tag{display:inline-block; font-size:11px; background:var(--accent-soft);
+  color:var(--accent); padding:2px 8px; border-radius:10px; margin-bottom:6px;
+  font-family:-apple-system,sans-serif; font-style:normal; font-weight:600; letter-spacing:.03em}
+
+/* Static question (Parts 3,5) */
+.q{background:var(--paper); border:1px solid var(--line); border-radius:6px;
+  padding:18px 20px; margin:16px 0; page-break-inside:avoid}
+.q .qnum{display:inline-block; background:var(--accent); color:#fff;
+  font-size:12px; font-weight:700; padding:2px 8px; border-radius:3px; margin-bottom:8px}
+.q .stem{font-family:Georgia,"Times New Roman",serif; font-size:16px;
+  margin:6px 0 12px; line-height:1.6}
+.q ol.options{list-style:none; padding:0; margin:0; counter-reset:opt}
+.q ol.options li{counter-increment:opt; padding:6px 10px 6px 36px;
+  border-radius:4px; margin:3px 0; position:relative;
+  font-family:Georgia,"Times New Roman",serif; font-size:15px}
+.q ol.options li::before{content:counter(opt,upper-alpha)")"; position:absolute;
+  left:10px; font-weight:700; font-family:-apple-system,sans-serif; color:var(--muted)}
+.q ol.options li.correct{background:var(--good-bg); color:var(--good); font-weight:600}
+.q ol.options li.correct::before{color:var(--good)}
+
+.answer-box{border-left:4px solid var(--good); background:var(--good-bg);
+  padding:14px 18px; border-radius:4px; margin:12px 0; font-size:14.5px}
+.answer-box .label{display:inline-block; background:var(--good); color:#fff;
+  font-size:11px; font-weight:700; padding:2px 8px; border-radius:3px;
+  margin-bottom:8px; letter-spacing:.05em}
+.answer-box p{margin:6px 0}
+
+/* Tables */
+.table-wrap{overflow-x:auto; margin:16px 0; border:1px solid var(--line);
+  border-radius:6px; background:var(--paper)}
+table{width:100%; border-collapse:collapse; font-size:14px; min-width:600px}
+th,td{padding:9px 12px; text-align:left; border-bottom:1px solid var(--line); vertical-align:top}
+th{background:var(--accent-soft); color:var(--accent); font-weight:700;
+  font-size:12px; text-transform:uppercase; letter-spacing:.04em}
+tr:last-child td{border-bottom:none}
+tr:nth-child(even) td{background:#fcfcfa}
+td code, th code{background:var(--code); padding:1px 5px; border-radius:3px;
+  font-size:12.5px; font-family:"SF Mono",Menlo,Consolas,monospace}
+
+/* Details */
+details{background:var(--paper); border:1px solid var(--line); border-radius:6px;
+  padding:0; margin:12px 0}
+details summary{padding:12px 16px; cursor:pointer; font-weight:600;
+  color:var(--accent); user-select:none; list-style:none;
+  display:flex; align-items:center; gap:8px}
+details summary::-webkit-details-marker{display:none}
+details summary::before{content:"▸"; display:inline-block; transition:transform .15s; color:var(--accent)}
+details[open] summary::before{transform:rotate(90deg)}
+details .details-body{padding:0 16px 16px; border-top:1px solid var(--line);
+  margin-top:0; padding-top:14px}
+
+/* Cheat sheet */
+.cheatsheet{background:var(--paper); border:2px solid var(--accent);
+  border-radius:8px; padding:20px 24px; margin:20px 0}
+.cheatsheet h3{margin-top:0; color:var(--accent); border-bottom:1px solid var(--line); padding-bottom:8px}
+.cheatsheet h4{color:var(--accent); margin-top:18px; font-size:13px}
+.cheatsheet .formula{font-size:13px; padding:6px 10px; margin:4px 0}
+
+/* Cards */
+.card-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(240px,1fr));
+  gap:14px; margin:16px 0}
+.card{background:var(--paper); border:1px solid var(--line); border-radius:6px; padding:14px 16px}
+.card h5{margin:0 0 6px; font-size:14px; color:var(--accent); font-weight:700}
+.card p{margin:0; font-size:14px; color:var(--muted)}
+
+/* Trick (Part 2) */
+.trick{background:var(--paper); border:1px solid var(--line); border-radius:6px;
+  padding:16px 20px; margin:18px 0; border-left:4px solid var(--accent)}
+.trick h4{margin:0 0 10px; color:var(--accent); text-transform:none;
+  letter-spacing:0; font-size:16px; font-weight:700}
+.trick p{margin:6px 0; font-size:14.5px}
+
+/* Badges */
+.badge{display:inline-block; font-size:11px; padding:2px 8px;
+  border-radius:10px; font-weight:700; letter-spacing:.04em}
+.badge.d1{background:#e6f2e9; color:#2b7a3e}
+.badge.d2{background:#e8f0f6; color:#2b5c86}
+.badge.d3{background:#fdf1d8; color:#8a6d1f}
+.badge.d4{background:#fbe4dc; color:#a0501e}
+.badge.d5{background:#f6dadc; color:#a02c2c}
+
+/* Interactive quiz */
+.iquiz{margin-top:14px; padding:14px 16px 12px; background:#fbfbf7;
+  border:1px solid var(--line); border-radius:6px}
+.iquiz .iqlabel{display:inline-block; background:var(--accent); color:#fff;
+  font-size:11px; font-weight:700; padding:2px 8px; border-radius:3px;
+  margin-bottom:10px; letter-spacing:.05em}
+.istem{font-family:Georgia,"Times New Roman",serif; font-size:15.5px;
+  margin-bottom:10px; line-height:1.6}
+.ioptions{display:flex; flex-direction:column; gap:4px; counter-reset:opt}
+.ioptions button{
+  display:block; width:100%; text-align:left; padding:8px 12px 8px 36px;
+  background:var(--paper); border:1px solid var(--line); border-radius:5px;
+  font-family:Georgia,"Times New Roman",serif; font-size:14.5px;
+  color:var(--ink); cursor:pointer; transition:background .12s, border-color .12s;
+  position:relative; line-height:1.5;
+}
+.ioptions button::before{
+  content:counter(opt, upper-alpha) ")"; counter-increment:opt;
+  position:absolute; left:12px; top:50%; transform:translateY(-50%);
+  font-weight:700; color:var(--muted); font-family:-apple-system,sans-serif;
+}
+.ioptions button:hover:not(.correct):not(.wrong){background:var(--accent-soft); border-color:var(--accent)}
+.ioptions.answered button{cursor:default}
+.ioptions.answered button:hover:not(.correct):not(.wrong){background:var(--paper); border-color:var(--line)}
+.ioptions button.correct{background:var(--good-bg); border-color:var(--good);
+  color:var(--good); font-weight:600}
+.ioptions button.correct::before{color:var(--good)}
+.ioptions button.wrong{background:var(--bad-bg); border-color:var(--bad); color:var(--bad)}
+.ioptions button.wrong::before{color:var(--bad)}
+
+.ianswer{display:none; margin-top:12px; padding:12px 14px;
+  background:var(--paper); border-left:3px solid var(--accent);
+  border-radius:4px; font-size:14px}
+.ianswer.show{display:block}
+.ianswer p{margin:6px 0}
+.ianswer strong{color:var(--accent)}
+
+.ireset{background:none; border:1px solid var(--line); color:var(--muted);
+  font-size:12px; padding:4px 10px; border-radius:4px; cursor:pointer;
+  margin-top:10px; font-family:inherit}
+.ireset:hover{border-color:var(--accent); color:var(--accent)}
+
+/* Responsive */
+@media (max-width:640px){
+  .page-wrap{padding:0 18px 60px}
+  .global-progress{padding:10px 18px; margin:0 -18px 24px; font-size:12px}
+  header.hero h1{font-size:23px}
+  nav.toc ol{grid-template-columns:1fr}
+}
+
+/* Print */
+@media print{
+  .global-progress, .ireset, .gp-reset-all{display:none}
+  body{background:#fff; font-size:11pt}
+  .q, .answer-box, .trick, .card{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+<div class="global-progress">
+  <span class="gp-stat" id="gp-stat"><strong>0</strong> / 0 tamamlandı • <strong>0</strong> doğru</span>
+  <div class="gp-track"><div class="gp-fill" id="gp-fill"></div></div>
+  <button class="gp-reset-all" id="gp-reset">↺ Tümünü sıfırla</button>
+</div>
+
+<header class="hero">
+  <h1>YDT Conditionals — Tam Exam Mastery Programı</h1>
+  <p>Her açıklamanın ardından interaktif alıştırma. Temel yapılardan gizli/inversion kalıplarına, 28 teknikten 50 soruluk mock sınavına, sınav günü stratejisine kadar tek dosyada.</p>
+</header>
+
+<nav class="toc">
+  <h2>İçindekiler</h2>
+  <ol>
+    <li><a href="#part1">Bölüm 1 — Temel Yapılar</a></li>
+    <li><a href="#part1-adv">Bölüm 1B — İleri Yapılar</a></li>
+    <li><a href="#part2">Bölüm 2 — 28 Teknik</a></li>
+    <li><a href="#part3">Bölüm 3 — Soru Tipleri</a></li>
+    <li><a href="#part4">Bölüm 4 — Tablolar & Cheat Sheet</a></li>
+    <li><a href="#part5">Bölüm 5 — 50 Soruluk Mock</a></li>
+    <li><a href="#part6">Bölüm 6 — Cevap Anahtarı</a></li>
+    <li><a href="#part7">Bölüm 7 — Final Strateji</a></li>
+  </ol>
+</nav>
+
+<!-- ============ PART 1 ============ -->
+<section class="part" id="part1">
+  <h2>BÖLÜM 1 — Temel Conditional Yapıları</h2>
+
+  <div class="note">
+    <strong>Terminoloji:</strong> <em>If-clause</em> = koşul cümlesi. <em>Main clause</em> = sonuç cümlesi. <em>Real</em> = gerçekleşmesi mümkün. <em>Unreal / hypothetical</em> = gerçek dışı varsayım. <em>Counterfactual</em> = geçmişte olmamış şeyin tersini varsayma. <em>V1 / V2 / V3</em> = fiilin yalın / past / past participle hâli.
+  </div>
+
+  <!-- ZERO -->
+  <h3>1. Zero Conditional</h3>
+  <div class="formula">If + present simple, present simple / imperative</div>
+  <p><strong>Anlam:</strong> Genel doğrular, bilimsel gerçekler, alışkanlıklar, kurallar.</p>
+  <div class="example"><span class="tag">Örnek</span><div class="en">If you heat water to 100 °C, it boils.</div><div class="tr">Suyu 100 °C'ye ısıtırsan kaynar.</div></div>
+  <div class="example"><span class="tag">Örnek</span><div class="en">If the red light is on, the machine stops automatically.</div><div class="tr">Kırmızı ışık yanıyorsa makine otomatik durur.</div></div>
+  <div class="tip"><strong>Tuzak:</strong> If-clause'ta <em>will</em> kullanılmaz. ❌ <em>If you will heat water...</em> → ✅ <em>If you heat water...</em></div>
+
+  <div class="iquiz">
+    <span class="iqlabel">ALIŞTIRMA</span>
+    <div class="istem">If you ___ ice, it ___.</div>
+    <div class="ioptions">
+      <button data-correct="true">heat / melts</button>
+      <button data-correct="false">will heat / melts</button>
+      <button data-correct="false">heated / would melt</button>
+      <button data-correct="false">heat / will melt</button>
+      <button data-correct="false">had heated / would have melted</button>
+    </div>
+    <div class="ianswer">
+      <p><strong>Cevap: A — heat / melts</strong></p>
+      <p>Bilimsel/genel doğru → zero conditional → present + present.</p>
+      <p><strong>Neden B yanlış:</strong> If-clause'ta <em>will</em> yasak.</p>
+    </div>
+    <button class="ireset">↺ Sıfırla</button>
+  </div>
+
+  <!-- FIRST -->
+  <h3>2. First Conditional</h3>
+  <div class="formula">If + present simple, will / can / may / must / should + V1</div>
+  <p><strong>Anlam:</strong> Gerçekleşmesi mümkün gelecek koşulu.</p>
+  <div class="example"><span class="tag">Örnek</span><div class="en">If it rains tomorrow, we will cancel the picnic.</div><div class="tr">Yarın yağmur yağarsa pikniği iptal edeceğiz.</div></div>
+  <div class="example"><span class="tag">Örnek</span><div class="en">If she doesn't arrive soon, we will have to leave without her.</div><div class="tr">Yakında gelmezse onsuz gitmek zorunda kalacağız.</div></div>
+
+  <div class="iquiz">
+    <span class="iqlabel">ALIŞTIRMA</span>
+    <div class="istem">If the new policy ___ next month, employees ___ more flexibility.</div>
+    <div class="ioptions">
+      <button data-correct="true">is adopted / will gain</button>
+      <button data-correct="false">will be adopted / gain</button>
+      <button data-correct="false">was adopted / would gain</button>
+      <button data-correct="false">had been adopted / would have gained</button>
+      <button data-correct="false">is adopted / gained</button>
+    </div>
+    <div class="ianswer">
+      <p><strong>Cevap: A — is adopted / will gain</strong></p>
+      <p><em>next month</em> → first conditional → present + will.</p>
+      <p><strong>Neden B yanlış:</strong> If-clause'ta <em>will</em> yasak.</p>
+    </div>
+    <button class="ireset">↺ Sıfırla</button>
+  </div>
+
+  <!-- SECOND -->
+  <h3>3. Second Conditional</h3>
+  <div class="formula">If + past simple (were), would / could / might + V1</div>
+  <p><strong>Anlam:</strong> Şu an veya gelecekte gerçek dışı / hayali durumlar.</p>
+  <div class="example"><span class="tag">Örnek</span><div class="en">If I had more time, I would learn Spanish.</div><div class="tr">Daha fazla zamanım olsaydı İspanyolca öğrenirdim.</div></div>
+  <div class="example"><span class="tag">Örnek</span><div class="en">If I were you, I would apologize immediately.</div><div class="tr">Senin yerinde olsam hemen özür dilerdim.</div></div>
+  <div class="tip"><strong>Tuzak:</strong> If-clause'ta <em>would</em> kullanılmaz. ❌ <em>If I would have time...</em> → ✅ <em>If I had time...</em></div>
+
+  <div class="iquiz">
+    <span class="iqlabel">ALIŞTIRMA</span>
+    <div class="istem">If I ___ a million dollars, I ___ around the world.</div>
+    <div class="ioptions">
+      <button data-correct="true">won / would travel</button>
+      <button data-correct="false">would win / traveled</button>
+      <button data-correct="false">win / will travel</button>
+      <button data-correct="false">had won / would have traveled</button>
+      <button data-correct="false">won / will travel</button>
+    </div>
+    <div class="ianswer">
+      <p><strong>Cevap: A — won / would travel</strong></p>
+      <p>Hayali şimdi/gelecek → second conditional → past + would.</p>
+      <p><strong>Neden B yanlış:</strong> If-clause'ta <em>would</em> yasak.</p>
+    </div>
+    <button class="ireset">↺ Sıfırla</button>
+  </div>
+
+  <!-- THIRD -->
+  <h3>4. Third Conditional</h3>
+  <div class="formula">If + past perfect (had + V3), would / could / might + have + V3</div>
+  <p><strong>Anlam:</strong> Geçmişte gerçekleşmemiş durumlar; pişmanlık, eleştiri, kaçırılmış fırsat.</p>
+  <div class="example"><span class="tag">Örnek</span><div class="en">If I had studied harder, I would have passed the exam.</div><div class="tr">Daha çok çalışsaydım sınavı geçerdim.</div></div>
+  <div class="example"><span class="tag">Örnek</span><div class="en">If they had left earlier, they wouldn't have missed the train.</div><div class="tr">Daha erken çıksalardı treni kaçırmazlardı.</div></div>
+
+  <div class="iquiz">
+    <span class="iqlabel">ALIŞTIRMA</span>
+    <div class="istem">If the team ___ the data more carefully, they ___ such a serious mistake.</div>
+    <div class="ioptions">
+      <button data-correct="true">had checked / wouldn't have made</button>
+      <button data-correct="false">checked / wouldn't make</button>
+      <button data-correct="false">check / won't make</button>
+      <button data-correct="false">had checked / wouldn't make</button>
+      <button data-correct="false">would check / hadn't made</button>
+    </div>
+    <div class="ianswer">
+      <p><strong>Cevap: A — had checked / wouldn't have made</strong></p>
+      <p>Geçmişte olmuş hata → third conditional → had + V3 / would have + V3.</p>
+    </div>
+    <button class="ireset">↺ Sıfırla</button>
+  </div>
+
+  <!-- MIXED 5a -->
+  <h3>5. Mixed Conditional 5a — Geçmiş koşul → Şimdiki sonuç</h3>
+  <div class="formula">If + past perfect, would + V1 (now / today)</div>
+  <div class="example"><span class="tag">Örnek</span><div class="en">If I had accepted that scholarship ten years ago, I would be living in London now.</div><div class="tr">On yıl önce o bursu kabul etseydim şimdi Londra'da yaşıyor olurdum.</div></div>
+  <div class="note"><strong>Kritik ipucu:</strong> <em>ago / last year / in 2015</em> + <em>now / today</em> → mixed 5a.</div>
+
+  <div class="iquiz">
+    <span class="iqlabel">ALIŞTIRMA</span>
+    <div class="istem">If the city ___ in public transport ten years ago, traffic ___ so severe today.</div>
+    <div class="ioptions">
+      <button data-correct="true">had invested / wouldn't be</button>
+      <button data-correct="false">invested / wouldn't be</button>
+      <button data-correct="false">had invested / wouldn't have been</button>
+      <button data-correct="false">invests / won't be</button>
+      <button data-correct="false">would invest / weren't</button>
+    </div>
+    <div class="ianswer">
+      <p><strong>Cevap: A — had invested / wouldn't be</strong></p>
+      <p><em>ten years ago</em> (geçmiş) + <em>today</em> (şimdi) → mixed 5a → had + V3 / would + V1.</p>
+      <p><strong>Neden C yanlış:</strong> <em>wouldn't have been</em> geçmiş sonuç; <em>today</em> ile çelişir.</p>
+    </div>
+    <button class="ireset">↺ Sıfırla</button>
+  </div>
+
+  <!-- MIXED 5b -->
+  <h3>6. Mixed Conditional 5b — Şimdiki durum → Geçmiş sonuç</h3>
+  <div class="formula">If + past simple, would have + V3 (yesterday / last year)</div>
+  <div class="example"><span class="tag">Örnek</span><div class="en">If she were more patient, she wouldn't have lost her temper at the meeting yesterday.</div><div class="tr">Daha sabırlı olsaydı dün toplantıda sinirini kaybetmezdi.</div></div>
+
+  <div class="iquiz">
+    <span class="iqlabel">ALIŞTIRMA</span>
+    <div class="istem">If he ___ so careless in general, he wouldn't have lost his passport yesterday.</div>
+    <div class="ioptions">
+      <button data-correct="true">weren't</button>
+      <button data-correct="false">hadn't been</button>
+      <button data-correct="false">isn't</button>
+      <button data-correct="false">wouldn't be</button>
+      <button data-correct="false">hasn't been</button>
+    </div>
+    <div class="ianswer">
+      <p><strong>Cevap: A — weren't</strong></p>
+      <p><em>in general</em> → şimdiki/genel kişilik; <em>yesterday</em> → geçmiş sonuç → mixed 5b.</p>
+    </div>
+    <button class="ireset">↺ Sıfırla</button>
+  </div>
+
+  <!-- REAL vs UNREAL -->
+  <h3>7. Real vs. Unreal Conditionals</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Özellik</th><th>Real</th><th>Unreal</th></tr>
+    <tr><td>Zaman</td><td>Şimdi/gelecek</td><td>Şimdi/geçmiş (hayali)</td></tr>
+    <tr><td>If-clause</td><td>Present</td><td>Past / Past perfect</td></tr>
+    <tr><td>Main</td><td>will / can / may</td><td>would / could / might</td></tr>
+    <tr><td>Örnek</td><td><em>If you try, you will succeed.</em></td><td><em>If you tried, you would succeed.</em></td></tr>
+  </table></div>
+
+  <div class="iquiz">
+    <span class="iqlabel">ALIŞTIRMA</span>
+    <div class="istem">"If I were a bird, I would fly over the mountains." — Bu cümle hangi türdendir?</div>
+    <div class="ioptions">
+      <button data-correct="true">Unreal (hypothetical)</button>
+      <button data-correct="false">Real (open condition)</button>
+      <button data-correct="false">Zero conditional</button>
+      <button data-correct="false">Third conditional</button>
+      <button data-correct="false">Mixed conditional</button>
+    </div>
+    <div class="ianswer">
+      <p><strong>Cevap: A — Unreal (hypothetical)</strong></p>
+      <p>Kuş değilim → hayali şimdi → <em>were / would + V1</em> → second conditional.</p>
+    </div>
+    <button class="ireset">↺ Sıfırla</button>
+  </div>
+
+  <!-- MODAL VERBS -->
+  <h3>8. Modal Verbs in Conditionals</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Modal</th><th>Anlam</th><th>Örnek</th></tr>
+    <tr><td><code>will</code></td><td>Kesin gelecek</td><td><em>If you hurry, you will catch it.</em></td></tr>
+    <tr><td><code>can</code></td><td>Yetenek/izin</td><td><em>If you finish, you can leave.</em></td></tr>
+    <tr><td><code>may / might</code></td><td>Olasılık</td><td><em>If she calls, she might be late.</em></td></tr>
+    <tr><td><code>must</code></td><td>Zorunluluk</td><td><em>If you enter, you must show ID.</em></td></tr>
+    <tr><td><code>should</code></td><td>Tavsiye</td><td><em>If you feel sick, you should rest.</em></td></tr>
+  </table></div>
+  <div class="tip"><strong>Modal perfect:</strong> <em>would have</em> (geçmiş sonuç), <em>could have</em> (yetenek/olasılık), <em>might have</em> (düşük olasılık), <em>must have</em> (güçlü çıkarım), <em>should have</em> (tavsiye/eleştiri).</div>
+
+  <div class="iquiz">
+    <span class="iqlabel">ALIŞTIRMA</span>
+    <div class="istem">If she had taken the earlier train, she ___ the meeting, but we cannot be certain.</div>
+    <div class="ioptions">
+      <button data-correct="true">might have caught</button>
+      <button data-correct="false">must have caught</button>
+      <button data-correct="false">should have caught</button>
+      <button data-correct="false">would catch</button>
+      <button data-correct="false">can catch</button>
+    </div>
+    <div class="ianswer">
+      <p><strong>Cevap: A — might have caught</strong></p>
+      <p><em>cannot be certain</em> → belirsizlik → düşük olasılık → <em>might have</em>.</p>
+      <p><strong>Neden B yanlış:</strong> <em>must have caught</em> "kesin yakaladı" der; cümle "emin olamayız" diyor.</p>
+    </div>
+    <button class="ireset">↺ Sıfırla</button>
+  </div>
+</section>
+
+<!-- ============ PART 1B ============ -->
+<section class="part" id="part1-adv">
+  <h2>BÖLÜM 1B — İleri ve Gizli Conditional Yapıları</h2>
+
+  <!-- UNLESS -->
+  <h3>Unless / If ... Not</h3>
+  <p><strong>Unless = except if / if not.</strong> "…-medikçe." <strong>Unless'ten sonra olumsuz fiil kullanılmaz.</strong></p>
+  <div class="example"><div class="en">Unless the government takes action, the situation will worsen.</div><div class="tr">Hükümet harekete geçmedikçe durum kötüleşecek.</div></div>
+
+  <div class="iquiz">
+    <span class="iqlabel">ALIŞTIRMA</span>
+    <div class="istem">Unless the government ___ stricter regulations, air pollution ___ to rise.</div>
+    <div class="ioptions">
+      <button data-correct="true">introduces / will continue</button>
+      <button data-correct="false">doesn't introduce / will continue</button>
+      <button data-correct="false">will introduce / continues</button>
+      <button data-correct="false">introduced / would continue</button>
+      <button data-correct="false">had introduced / would have continued</button>
+    </div>
+    <div class="ianswer">
+      <p><strong>Cevap: A — introduces / will continue</strong></p>
+      <p>Unless + <strong>olumlu present</strong> + <em>will</em> → first conditional.</p>
+      <p><strong>Neden B yanlış:</strong> <em>unless + doesn't</em> = çifte olumsuz → doğrudan ele.</p>
+    </div>
+    <button class="ireset">↺ Sıfırla</button>
+  </div>
+
+  <!-- PROVIDED / AS LONG AS -->
+  <h3>Provided / Providing (that) / As long as / On condition that</h3>
+  <p>Hepsi "…şartıyla / …dığı sürece" anlamı verir; resmî şart belirtir.</p>
+  <div class="example"><div class="en">You can borrow the car provided that you return it by 8 p.m.</div><div class="tr">Arabayı ödünç alabilirsin, 20:00'ye kadar getirmen şartıyla.</div></div>
+
+  <div class="iquiz">
+    <span class="iqlabel">ALIŞTIRMA</span>
+    <div class="istem">The scholarship will be renewed ___ the student maintains a GPA above 3.5.</div>
+    <div class="ioptions">
+      <button data-correct="true">provided that</button>
+      <button data-correct="false">in case</button>
+      <button data-correct="false">even if</button>
+      <button data-correct="false">unless</button>
+      <button data-correct="false">otherwise</button>
+    </div>
+    <div class="ianswer">
+      <p><strong>Cevap: A — provided that</strong></p>
+      <p>Resmî şart → <em>provided that</em>.</p>
+      <p><strong>Neden D yanlış:</strong> <em>unless</em> = "sürdürmedikçe" → anlam ters.</p>
+    </div>
+    <button class="ireset">↺ Sıfırla</button>
+  </div>
+
+  <!-- IN CASE -->
+  <h3>In case / In case of</h3>
+  <p><strong>In case = "olur da … diye"</strong> (önlem, koşul değil). <strong>In case of + noun.</strong></p>
+  <div class="example"><div class="en">Take some cash in case the card machine doesn't work.</div><div class="tr">Kart makinesi çalışmazsa diye yanına nakit al.</div></div>
+
+  <div class="iquiz">
+    <span class="iqlabel">ALIŞTIRMA</span>
+    <div class="istem">Take a power bank with you ___ your phone runs out of battery.</div>
+    <div class="ioptions">
+      <button data-correct="false">if</button>
+      <button data-correct="true">in case</button>
+      <button data-correct="false">unless</button>
+      <button data-correct="false">provided that</button>
+      <button data-correct="false">even if</button>
+    </div>
+    <div class="ianswer">
+      <p><strong>Cevap: B — in case</strong></p>
+      <p>Power bank'i <strong>önceden</strong> al → önlem → <em>in case</em>.</p>
+      <p><strong>Neden A yanlış:</strong> <em>if</em> ile eylem zamanlaması ters olur (bitince almak geç).</p>
+    </div>
+    <button class="ireset">↺ Sıfırla</button>
+  </div>
+
+  <!-- EVEN IF / EVEN THOUGH -->
+  <h3>Even if / Even though</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Even if</th><th>Even though</th></tr>
+    <tr><td>"…olsa bile" (hipotetik)</td><td>"…rağmen" (gerçek)</td></tr>
+    <tr><td><em>Even if it rains, we will go.</em></td><td><em>Even though it rained, we went.</em></td></tr>
+  </table></div>
+
+  <div class="iquiz">
+    <span class="iqlabel">ALIŞTIRMA</span>
+    <div class="istem">___ the evidence was overwhelming, the jury acquitted the defendant.</div>
+    <div class="ioptions">
+      <button data-correct="false">Even if</button>
+      <button data-correct="true">Even though</button>
+      <button data-correct="false">Unless</button>
+      <button data-correct="false">In case</button>
+      <button data-correct="false">Provided that</button>
+    </div>
+    <div class="ianswer">
+      <p><strong>Cevap: B — Even though</strong></p>
+      <p>Jüri beraat etti ve delil <strong>gerçekten</strong> güçlüydü → gerçek zıtlık → <em>even though</em>.</p>
+    </div>
+    <button class="ireset">↺ Sıfırla</button>
+  </div>
+
+  <!-- ONLY IF / IF ONLY -->
+  <h3>Only if / If only</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Only if</th><th>If only</th></tr>
+    <tr><td>"Ancak … şartıyla" (kısıtlayıcı)</td><td>"Keşke" (dilek/pişmanlık)</td></tr>
+    <tr><td><em>You can succeed only if you work hard.</em></td><td><em>If only I had studied harder!</em></td></tr>
+  </table></div>
+
+  <div class="iquiz">
+    <span class="iqlabel">ALIŞTIRMA</span>
+    <div class="istem">If only I ___ my parents' advice when I was younger!</div>
+    <div class="ioptions">
+      <button data-correct="true">had taken</button>
+      <button data-correct="false">took</button>
+      <button data-correct="false">would take</button>
+      <button data-correct="false">have taken</button>
+      <button data-correct="false">take</button>
+    </div>
+    <div class="ianswer">
+      <p><strong>Cevap: A — had taken</strong></p>
+      <p><em>when I was younger</em> → geçmiş → pişmanlık → <em>if only + past perfect</em>.</p>
+    </div>
+    <button class="ireset">↺ Sıfırla</button>
+  </div>
+
+  <!-- BUT FOR / WITHOUT -->
+  <h3>But for / Without + noun</h3>
+  <p>"…olmasaydı" anlamı; sonuç <em>would (have) V3</em>.</p>
+  <div class="example"><div class="en">But for your help, I would have failed.</div><div class="tr">Yardımın olmasaydı başarısız olurdum.</div></div>
+
+  <div class="iquiz">
+    <span class="iqlabel">ALIŞTIRMA</span>
+    <div class="istem">___ your timely warning, we would have walked straight into the ambush.</div>
+    <div class="ioptions">
+      <button data-correct="true">But for</button>
+      <button data-correct="false">Unless</button>
+      <button data-correct="false">Even if</button>
+      <button data-correct="false">In case of</button>
+      <button data-correct="false">Provided that</button>
+    </div>
+    <div class="ianswer">
+      <p><strong>Cevap: A — But for</strong></p>
+      <p><em>your timely warning</em> = noun phrase; <em>would have walked</em> = geçmiş varsayım → <em>But for + noun</em>.</p>
+      <p><strong>Neden B yanlış:</strong> <em>Unless</em> ardından <strong>clause</strong> gelir, noun değil.</p>
+    </div>
+    <button class="ireset">↺ Sıfırla</button>
+  </div>
+
+  <!-- IF IT WERE NOT FOR -->
+  <h3>If it were not for / If it had not been for</h3>
+  <ul>
+    <li><strong>If it were not for + noun</strong> → şimdiki varsayım.</li>
+    <li><strong>If it had not been for + noun</strong> → geçmiş varsayım.</li>
+  </ul>
+
+  <div class="iquiz">
+    <span class="iqlabel">ALIŞTIRMA</span>
+    <div class="istem">___ the timely intervention of the medical team, the patient ___.</div>
+    <div class="ioptions">
+      <button data-correct="false">Were it not for / would not survive</button>
+      <button data-correct="true">Had it not been for / would not have survived</button>
+      <button data-correct="false">But for / will not survive</button>
+      <button data-correct="false">If it were not for / would not have survived</button>
+      <button data-correct="false">Without / does not survive</button>
+    </div>
+    <div class="ianswer">
+      <p><strong>Cevap: B — Had it not been for / would not have survived</strong></p>
+      <p><em>timely intervention</em> geçmişte → geçmiş varsayım → <em>Had it not been for</em> + <em>would have + V3</em>.</p>
+      <p><strong>Neden A yanlış:</strong> <em>Were it not for</em> şimdiki varsayım ister.</p>
+    </div>
+    <button class="ireset">↺ Sıfırla</button>
+  </div>
+
+  <!-- INVERSION -->
+  <h3>Inversion Kalıpları (if olmadan)</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Normal</th><th>Inversion</th><th>Anlam</th></tr>
+    <tr><td>If I had known</td><td><strong>Had I known</strong></td><td>Bilseydim (geçmiş)</td></tr>
+    <tr><td>If I were you</td><td><strong>Were I you</strong></td><td>Senin yerinde olsam</td></tr>
+    <tr><td>If it were not for</td><td><strong>Were it not for</strong></td><td>Olmasaydı (şimdi)</td></tr>
+    <tr><td>If it had not been for</td><td><strong>Had it not been for</strong></td><td>Olmasaydı (geçmiş)</td></tr>
+    <tr><td>If he were to come</td><td><strong>Were he to come</strong></td><td>Gelseydi (düşük olasılık)</td></tr>
+    <tr><td>If you should need</td><td><strong>Should you need</strong></td><td>İhtiyacın olursa (resmî)</td></tr>
+  </table></div>
+
+  <div class="iquiz">
+    <span class="iqlabel">ALIŞTIRMA</span>
+    <div class="istem">___ the researchers documented their findings earlier, the discovery ___ by another team.</div>
+    <div class="ioptions">
+      <button data-correct="true">Had / might have been made</button>
+      <button data-correct="false">If / might be made</button>
+      <button data-correct="false">Were / might have been made</button>
+      <button data-correct="false">Should / might be made</button>
+      <button data-correct="false">Unless / might have been made</button>
+    </div>
+    <div class="ianswer">
+      <p><strong>Cevap: A — Had / might have been made</strong></p>
+      <p>Geçmiş sonuç → <em>Had + subject + V3</em> + <em>might have been made</em>.</p>
+    </div>
+    <button class="ireset">↺ Sıfırla</button>
+  </div>
+
+  <!-- WISH -->
+  <h3>Wish / If Only</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Zaman</th><th>Form</th><th>Örnek</th></tr>
+    <tr><td>Şimdi</td><td>wish + past simple</td><td><em>I wish I had more time.</em></td></tr>
+    <tr><td>Geçmiş</td><td>wish + past perfect</td><td><em>I wish I had studied harder.</em></td></tr>
+    <tr><td>Gelecek</td><td>wish + would</td><td><em>I wish it would stop raining.</em></td></tr>
+  </table></div>
+
+  <div class="iquiz">
+    <span class="iqlabel">ALIŞTIRMA</span>
+    <div class="istem">I wish I ___ more attention to the safety briefing before the expedition.</div>
+    <div class="ioptions">
+      <button data-correct="true">had paid</button>
+      <button data-correct="false">paid</button>
+      <button data-correct="false">would pay</button>
+      <button data-correct="false">pay</button>
+      <button data-correct="false">have paid</button>
+    </div>
+    <div class="ianswer">
+      <p><strong>Cevap: A — had paid</strong></p>
+      <p><em>before the expedition</em> → geçmiş pişmanlık → <em>wish + past perfect</em>.</p>
+    </div>
+    <button class="ireset">↺ Sıfırla</button>
+  </div>
+
+  <!-- WOULD RATHER -->
+  <h3>Would rather / Would sooner</h3>
+  <div class="formula">would rather + V1 (kendi tercihi) | would rather + subject + past (başkası) | would rather + have + V3 (geçmiş)</div>
+  <div class="example"><div class="en">I would rather you didn't smoke here.</div><div class="tr">Burada sigara içmemeni tercih ederim.</div></div>
+
+  <div class="iquiz">
+    <span class="iqlabel">ALIŞTIRMA</span>
+    <div class="istem">I would rather you ___ the matter to the manager before making a decision.</div>
+    <div class="ioptions">
+      <button data-correct="true">referred</button>
+      <button data-correct="false">refer</button>
+      <button data-correct="false">will refer</button>
+      <button data-correct="false">would refer</button>
+      <button data-correct="false">have referred</button>
+    </div>
+    <div class="ianswer">
+      <p><strong>Cevap: A — referred</strong></p>
+      <p><em>would rather you</em> → başkası → past simple.</p>
+    </div>
+    <button class="ireset">↺ Sıfırla</button>
+  </div>
+
+  <!-- IT'S TIME -->
+  <h3>It's time / It's high time</h3>
+  <div class="formula">It's (high) time + subject + past simple</div>
+  <div class="example"><div class="en">It's high time you found a job.</div><div class="tr">Artık bir iş bulmanın vakti geldi.</div></div>
+
+  <div class="iquiz">
+    <span class="iqlabel">ALIŞTIRMA</span>
+    <div class="istem">It's high time the authorities ___ concrete measures against air pollution.</div>
+    <div class="ioptions">
+      <button data-correct="true">took</button>
+      <button data-correct="false">take</button>
+      <button data-correct="false">will take</button>
+      <button data-correct="false">have taken</button>
+      <button data-correct="false">would take</button>
+    </div>
+    <div class="ianswer">
+      <p><strong>Cevap: A — took</strong></p>
+      <p><em>It's high time</em> → past subjunctive → <em>took</em>.</p>
+    </div>
+    <button class="ireset">↺ Sıfırla</button>
+  </div>
+</section>
+
+<!-- ============ PART 2 ============ -->
+<section class="part" id="part2">
+  <h2>BÖLÜM 2 — 28 YDT Sınav Tekniği</h2>
+  <p>Her teknikte: ne ortaya çıkarır → neden işler → YDT'de ne zaman kullanılır → <strong>tıklanabilir örnek soru</strong> ve anında geri bildirim.</p>
+
+  <div class="trick">
+    <h4>Teknik 1 — If Olmadan Koşul: Inversion Avcılığı</h4>
+    <p><strong>Ne:</strong> Cümlede <em>if</em> yok ama başta büyük harfle <em>Had / Were / Should</em> varsa gizli conditional'dır.</p>
+    <p><strong>Neden:</strong> Resmî dilde <em>if</em> düşer, yardımcı fiil başa geçer.</p>
+    <div class="iquiz"><span class="iqlabel">ALIŞTIRMA</span>
+      <div class="istem">___ the company acted sooner, the crisis could have been avoided.</div>
+      <div class="ioptions">
+        <button data-correct="false">If</button>
+        <button data-correct="true">Had</button>
+        <button data-correct="false">Were</button>
+        <button data-correct="false">Should</button>
+        <button data-correct="false">Unless</button>
+      </div>
+      <div class="ianswer"><p><strong>Cevap: B — Had</strong></p><p><em>could have been avoided</em> → geçmiş varsayım → <em>Had the company acted</em>.</p></div>
+      <button class="ireset">↺ Sıfırla</button>
+    </div>
+  </div>
+
+  <div class="trick">
+    <h4>Teknik 2 — Zaman Zarfı Çapası</h4>
+    <p><strong>Ne:</strong> <em>now/today</em> → present sonuç; <em>yesterday/ago</em> → past sonuç.</p>
+    <div class="iquiz"><span class="iqlabel">ALIŞTIRMA</span>
+      <div class="istem">If I had invested in that startup in 2015, I ___ financially independent now.</div>
+      <div class="ioptions">
+        <button data-correct="true">would be</button>
+        <button data-correct="false">would have been</button>
+        <button data-correct="false">will be</button>
+        <button data-correct="false">am</button>
+        <button data-correct="false">had been</button>
+      </div>
+      <div class="ianswer"><p><strong>Cevap: A — would be</strong></p><p>Mixed 5a: <em>in 2015</em> + <em>now</em> → <em>had + V3 / would + V1</em>.</p></div>
+      <button class="ireset">↺ Sıfırla</button>
+    </div>
+  </div>
+
+  <div class="trick">
+    <h4>Teknik 3 — "would have + V3" Geçmiş Varsayım İzi</h4>
+    <p><strong>Ne:</strong> Sonuçta <em>would have + V3</em> varsa koşul geçmişe aittir.</p>
+    <div class="iquiz"><span class="iqlabel">ALIŞTIRMA</span>
+      <div class="istem">Without the new irrigation system, the farmers ___ significantly lower yields last season.</div>
+      <div class="ioptions">
+        <button data-correct="true">would have had</button>
+        <button data-correct="false">would have</button>
+        <button data-correct="false">had</button>
+        <button data-correct="false">will have</button>
+        <button data-correct="false">have had</button>
+      </div>
+      <div class="ianswer"><p><strong>Cevap: A — would have had</strong></p><p><em>Without + noun</em> + <em>last season</em> → geçmiş → <em>would have + V3</em>.</p></div>
+      <button class="ireset">↺ Sıfırla</button>
+    </div>
+  </div>
+
+  <div class="trick">
+    <h4>Teknik 4 — "Had + V3" If Olmadan</h4>
+    <p><strong>Ne:</strong> <em>Had + subject + V3</em> → <em>If + past perfect</em>'in devrik hâlidir.</p>
+    <div class="iquiz"><span class="iqlabel">ALIŞTIRMA</span>
+      <div class="istem">Had the researchers ___ the data more carefully, the error would not have occurred.</div>
+      <div class="ioptions">
+        <button data-correct="true">analyzed</button>
+        <button data-correct="false">analyze</button>
+        <button data-correct="false">analyzing</button>
+        <button data-correct="false">would analyze</button>
+        <button data-correct="false">had analyzed</button>
+      </div>
+      <div class="ianswer"><p><strong>Cevap: A — analyzed</strong></p><p><em>Had</em> zaten yardımcı fiil → ana fiil V3.</p><p><strong>Neden E yanlış:</strong> çifte had.</p></div>
+      <button class="ireset">↺ Sıfırla</button>
+    </div>
+  </div>
+
+  <div class="trick">
+    <h4>Teknik 5 — Unless'te Çifte Olumsuz Tuzağı</h4>
+    <p><strong>Ne:</strong> <em>Unless</em> + <em>not</em> → neredeyse kesin yanlış.</p>
+    <div class="iquiz"><span class="iqlabel">ALIŞTIRMA</span>
+      <div class="istem">Unless the government ___ stricter regulations, air pollution ___ to rise.</div>
+      <div class="ioptions">
+        <button data-correct="true">introduces / will continue</button>
+        <button data-correct="false">doesn't introduce / will continue</button>
+        <button data-correct="false">will introduce / continues</button>
+        <button data-correct="false">introduced / would continue</button>
+        <button data-correct="false">had introduced / would have continued</button>
+      </div>
+      <div class="ianswer"><p><strong>Cevap: A — introduces / will continue</strong></p><p>Unless + olumlu present + will.</p></div>
+      <button class="ireset">↺ Sıfırla</button>
+    </div>
+  </div>
+
+  <div class="trick">
+    <h4>Teknik 6 — Even If vs. Even Though: Gerçeklik Testi</h4>
+    <div class="iquiz"><span class="iqlabel">ALIŞTIRMA</span>
+      <div class="istem">___ the evidence was overwhelming, the jury acquitted the defendant.</div>
+      <div class="ioptions">
+        <button data-correct="false">Even if</button>
+        <button data-correct="true">Even though</button>
+        <button data-correct="false">Unless</button>
+        <button data-correct="false">In case</button>
+        <button data-correct="false">Provided that</button>
+      </div>
+      <div class="ianswer"><p><strong>Cevap: B — Even though</strong></p><p>Delil gerçekten güçlüydü → gerçek zıtlık.</p></div>
+      <button class="ireset">↺ Sıfırla</button>
+    </div>
+  </div>
+
+  <div class="trick">
+    <h4>Teknik 7 — In Case vs. If: "Diye" Testi</h4>
+    <div class="iquiz"><span class="iqlabel">ALIŞTIRMA</span>
+      <div class="istem">Take a power bank with you ___ your phone runs out of battery during the trip.</div>
+      <div class="ioptions">
+        <button data-correct="false">if</button>
+        <button data-correct="true">in case</button>
+        <button data-correct="false">unless</button>
+        <button data-correct="false">provided that</button>
+        <button data-correct="false">even if</button>
+      </div>
+      <div class="ianswer"><p><strong>Cevap: B — in case</strong></p><p>Önlem → <em>in case</em>.</p></div>
+      <button class="ireset">↺ Sıfırla</button>
+    </div>
+  </div>
+
+  <div class="trick">
+    <h4>Teknik 8 — But For / Without: Varsayım Sinyali</h4>
+    <div class="iquiz"><span class="iqlabel">ALIŞTIRMA</span>
+      <div class="istem">___ your timely warning, we would have walked straight into the ambush.</div>
+      <div class="ioptions">
+        <button data-correct="true">But for</button>
+        <button data-correct="false">Unless</button>
+        <button data-correct="false">Even if</button>
+        <button data-correct="false">In case of</button>
+        <button data-correct="false">Provided that</button>
+      </div>
+      <div class="ianswer"><p><strong>Cevap: A — But for</strong></p><p>But for + noun = olmasaydı.</p></div>
+      <button class="ireset">↺ Sıfırla</button>
+    </div>
+  </div>
+
+  <div class="trick">
+    <h4>Teknik 9 — Otherwise / Or Else: "If Not" İzi</h4>
+    <div class="iquiz"><span class="iqlabel">ALIŞTIRMA</span>
+      <div class="istem">The documents must be submitted by Friday; ___, your application will not be considered.</div>
+      <div class="ioptions">
+        <button data-correct="true">otherwise</button>
+        <button data-correct="false">unless</button>
+        <button data-correct="false">even if</button>
+        <button data-correct="false">in case</button>
+        <button data-correct="false">if only</button>
+      </div>
+      <div class="ianswer"><p><strong>Cevap: A — otherwise</strong></p><p>"Aksi halde" → otherwise.</p></div>
+      <button class="ireset">↺ Sıfırla</button>
+    </div>
+  </div>
+
+  <div class="trick">
+    <h4>Teknik 10 — Only If Cümle Başında Inversion</h4>
+    <div class="iquiz"><span class="iqlabel">ALIŞTIRMA</span>
+      <div class="istem">Only if the committee ___ unanimous approval ___.</div>
+      <div class="ioptions">
+        <button data-correct="false">gives / the project will proceed</button>
+        <button data-correct="true">gives / will the project proceed</button>
+        <button data-correct="false">will give / the project proceeds</button>
+        <button data-correct="false">gave / the project would proceed</button>
+        <button data-correct="false">had given / would the project have proceeded</button>
+      </div>
+      <div class="ianswer"><p><strong>Cevap: B — gives / will the project proceed</strong></p><p><em>Only if</em> başta → inversion.</p></div>
+      <button class="ireset">↺ Sıfırla</button>
+    </div>
+  </div>
+
+  <div class="trick">
+    <h4>Teknik 11 — If Only = "Keşke"</h4>
+    <div class="iquiz"><span class="iqlabel">ALIŞTIRMA</span>
+      <div class="istem">If only I ___ my parents' advice when I was younger!</div>
+      <div class="ioptions">
+        <button data-correct="true">had taken</button>
+        <button data-correct="false">took</button>
+        <button data-correct="false">would take</button>
+        <button data-correct="false">have taken</button>
+        <button data-correct="false">take</button>
+      </div>
+      <div class="ianswer"><p><strong>Cevap: A — had taken</strong></p><p>Geçmiş pişmanlık → past perfect.</p></div>
+      <button class="ireset">↺ Sıfırla</button>
+    </div>
+  </div>
+
+  <div class="trick">
+    <h4>Teknik 12 — Wish + Past Perfect = Geçmiş Pişmanlık</h4>
+    <div class="iquiz"><span class="iqlabel">ALIŞTIRMA</span>
+      <div class="istem">I wish I ___ more attention to the safety briefing before the expedition.</div>
+      <div class="ioptions">
+        <button data-correct="true">had paid</button>
+        <button data-correct="false">paid</button>
+        <button data-correct="false">would pay</button>
+        <button data-correct="false">pay</button>
+        <button data-correct="false">have paid</button>
+      </div>
+      <div class="ianswer"><p><strong>Cevap: A — had paid</strong></p><p>Geçmiş pişmanlık → past perfect.</p></div>
+      <button class="ireset">↺ Sıfırla</button>
+    </div>
+  </div>
+
+  <div class="trick">
+    <h4>Teknik 13 — Modal Perfect Ayrımı</h4>
+    <div class="iquiz"><span class="iqlabel">ALIŞTIRMA</span>
+      <div class="istem">If she had taken the earlier train, she ___ the meeting, but we cannot be certain.</div>
+      <div class="ioptions">
+        <button data-correct="true">might have caught</button>
+        <button data-correct="false">must have caught</button>
+        <button data-correct="false">should have caught</button>
+        <button data-correct="false">would catch</button>
+        <button data-correct="false">can catch</button>
+      </div>
+      <div class="ianswer"><p><strong>Cevap: A — might have caught</strong></p><p>Belirsizlik → düşük olasılık → might have.</p></div>
+      <button class="ireset">↺ Sıfırla</button>
+    </div>
+  </div>
+
+  <div class="trick">
+    <h4>Teknik 14 — Present Condition → Past Result (Mixed 5b)</h4>
+    <div class="iquiz"><span class="iqlabel">ALIŞTIRMA</span>
+      <div class="istem">If he ___ so careless in general, he wouldn't have lost his passport yesterday.</div>
+      <div class="ioptions">
+        <button data-correct="true">weren't</button>
+        <button data-correct="false">hadn't been</button>
+        <button data-correct="false">isn't</button>
+        <button data-correct="false">wouldn't be</button>
+        <button data-correct="false">hasn't been</button>
+      </div>
+      <div class="ianswer"><p><strong>Cevap: A — weren't</strong></p><p><em>in general</em> + <em>yesterday</em> → mixed 5b.</p></div>
+      <button class="ireset">↺ Sıfırla</button>
+    </div>
+  </div>
+
+  <div class="trick">
+    <h4>Teknik 15 — Past Condition → Present Result (Mixed 5a)</h4>
+    <div class="iquiz"><span class="iqlabel">ALIŞTIRMA</span>
+      <div class="istem">If the city ___ the new metro line ten years ago, traffic ___ so congested today.</div>
+      <div class="ioptions">
+        <button data-correct="true">had built / wouldn't be</button>
+        <button data-correct="false">built / wouldn't be</button>
+        <button data-correct="false">had built / wouldn't have been</button>
+        <button data-correct="false">builds / won't be</button>
+        <button data-correct="false">would build / weren't</button>
+      </div>
+      <div class="ianswer"><p><strong>Cevap: A — had built / wouldn't be</strong></p><p><em>ten years ago</em> + <em>today</em> → mixed 5a.</p></div>
+      <button class="ireset">↺ Sıfırla</button>
+    </div>
+  </div>
+
+  <div class="trick">
+    <h4>Teknik 16 — If-Clause'ta "Will" Yasak</h4>
+    <div class="iquiz"><span class="iqlabel">ALIŞTIRMA</span>
+      <div class="istem">If the weather ___ tomorrow, the outdoor concert ___ as planned.</div>
+      <div class="ioptions">
+        <button data-correct="true">improves / will take place</button>
+        <button data-correct="false">will improve / takes place</button>
+        <button data-correct="false">improved / would take place</button>
+        <button data-correct="false">had improved / would have taken place</button>
+        <button data-correct="false">improves / took place</button>
+      </div>
+      <div class="ianswer"><p><strong>Cevap: A — improves / will take place</strong></p><p>First conditional.</p></div>
+      <button class="ireset">↺ Sıfırla</button>
+    </div>
+  </div>
+
+  <div class="trick">
+    <h4>Teknik 17 — If-Clause'ta "Would" Yasak</h4>
+    <div class="iquiz"><span class="iqlabel">ALIŞTIRMA</span>
+      <div class="istem">If I ___ more free time, I would definitely take up painting.</div>
+      <div class="ioptions">
+        <button data-correct="true">had</button>
+        <button data-correct="false">would have</button>
+        <button data-correct="false">will have</button>
+        <button data-correct="false">have had</button>
+        <button data-correct="false">am having</button>
+      </div>
+      <div class="ianswer"><p><strong>Cevap: A — had</strong></p><p>Second conditional → if-clause past simple.</p></div>
+      <button class="ireset">↺ Sıfırla</button>
+    </div>
+  </div>
+
+  <div class="trick">
+    <h4>Teknik 18 — Imperative Main Clause = Zero/First Sinyali</h4>
+    <div class="iquiz"><span class="iqlabel">ALIŞTIRMA</span>
+      <div class="istem">If you ___ any suspicious activity, ___ the security immediately.</div>
+      <div class="ioptions">
+        <button data-correct="true">notice / report</button>
+        <button data-correct="false">will notice / report</button>
+        <button data-correct="false">noticed / would report</button>
+        <button data-correct="false">had noticed / report</button>
+        <button data-correct="false">notice / will report</button>
+      </div>
+      <div class="ianswer"><p><strong>Cevap: A — notice / report</strong></p><p>Talimat → imperative → report.</p></div>
+      <button class="ireset">↺ Sıfırla</button>
+    </div>
+  </div>
+
+  <div class="trick">
+    <h4>Teknik 19 — Provided That / As Long As: Resmî Şart</h4>
+    <div class="iquiz"><span class="iqlabel">ALIŞTIRMA</span>
+      <div class="istem">The scholarship will be renewed ___ the student maintains a GPA above 3.0.</div>
+      <div class="ioptions">
+        <button data-correct="true">provided that</button>
+        <button data-correct="false">in case</button>
+        <button data-correct="false">even if</button>
+        <button data-correct="false">unless</button>
+        <button data-correct="false">otherwise</button>
+      </div>
+      <div class="ianswer"><p><strong>Cevap: A — provided that</strong></p><p>Resmî şart.</p></div>
+      <button class="ireset">↺ Sıfırla</button>
+    </div>
+  </div>
+
+  <div class="trick">
+    <h4>Teknik 20 — Suppose / Supposing → Second Conditional</h4>
+    <div class="iquiz"><span class="iqlabel">ALIŞTIRMA</span>
+      <div class="istem">Suppose you ___ a million dollars tomorrow — what would you do first?</div>
+      <div class="ioptions">
+        <button data-correct="true">won</button>
+        <button data-correct="false">win</button>
+        <button data-correct="false">will win</button>
+        <button data-correct="false">had won</button>
+        <button data-correct="false">would win</button>
+      </div>
+      <div class="ianswer"><p><strong>Cevap: A — won</strong></p><p>Suppose + past + would → second conditional.</p></div>
+      <button class="ireset">↺ Sıfırla</button>
+    </div>
+  </div>
+
+  <div class="trick">
+    <h4>Teknik 21 — Whether Or Not: Concessive, Conditional Değil</h4>
+    <div class="iquiz"><span class="iqlabel">ALIŞTIRMA</span>
+      <div class="istem">___ the results are positive or negative, the research team will publish them.</div>
+      <div class="ioptions">
+        <button data-correct="true">Whether</button>
+        <button data-correct="false">If</button>
+        <button data-correct="false">Unless</button>
+        <button data-correct="false">Provided that</button>
+        <button data-correct="false">In case</button>
+      </div>
+      <div class="ianswer"><p><strong>Cevap: A — Whether</strong></p><p>İki alternatif → whether.</p></div>
+      <button class="ireset">↺ Sıfırla</button>
+    </div>
+  </div>
+
+  <div class="trick">
+    <h4>Teknik 22 — It's High Time + Past</h4>
+    <div class="iquiz"><span class="iqlabel">ALIŞTIRMA</span>
+      <div class="istem">It's high time the authorities ___ concrete measures against air pollution.</div>
+      <div class="ioptions">
+        <button data-correct="true">took</button>
+        <button data-correct="false">take</button>
+        <button data-correct="false">will take</button>
+        <button data-correct="false">have taken</button>
+        <button data-correct="false">would take</button>
+      </div>
+      <div class="ianswer"><p><strong>Cevap: A — took</strong></p><p>Past subjunctive.</p></div>
+      <button class="ireset">↺ Sıfırla</button>
+    </div>
+  </div>
+
+  <div class="trick">
+    <h4>Teknik 23 — Would Rather + Subject + Past</h4>
+    <div class="iquiz"><span class="iqlabel">ALIŞTIRMA</span>
+      <div class="istem">I would rather you ___ the matter to the manager before making a decision.</div>
+      <div class="ioptions">
+        <button data-correct="true">referred</button>
+        <button data-correct="false">refer</button>
+        <button data-correct="false">will refer</button>
+        <button data-correct="false">would refer</button>
+        <button data-correct="false">have referred</button>
+      </div>
+      <div class="ianswer"><p><strong>Cevap: A — referred</strong></p><p>would rather + subject → past.</p></div>
+      <button class="ireset">↺ Sıfırla</button>
+    </div>
+  </div>
+
+  <div class="trick">
+    <h4>Teknik 24 — Implied Conditional: "but" + Geçmiş</h4>
+    <div class="iquiz"><span class="iqlabel">ALIŞTIRMA</span>
+      <div class="istem">I ___ you with the project, but I was on a tight deadline myself.</div>
+      <div class="ioptions">
+        <button data-correct="true">would have helped</button>
+        <button data-correct="false">would help</button>
+        <button data-correct="false">helped</button>
+        <button data-correct="false">will help</button>
+        <button data-correct="false">had helped</button>
+      </div>
+      <div class="ianswer"><p><strong>Cevap: A — would have helped</strong></p><p>Geçmiş varsayım.</p></div>
+      <button class="ireset">↺ Sıfırla</button>
+    </div>
+  </div>
+
+  <div class="trick">
+    <h4>Teknik 25 — Uzun Akademik Cümlede Koşul Avı</h4>
+    <div class="iquiz"><span class="iqlabel">ALIŞTIRMA</span>
+      <div class="istem">Although the initial trials suggested that the drug was safe, had the researchers monitored the patients for a longer period, they ___ the rare side effects that later emerged.</div>
+      <div class="ioptions">
+        <button data-correct="true">would have detected</button>
+        <button data-correct="false">would detect</button>
+        <button data-correct="false">detected</button>
+        <button data-correct="false">will detect</button>
+        <button data-correct="false">have detected</button>
+      </div>
+      <div class="ianswer"><p><strong>Cevap: A — would have detected</strong></p><p><em>had the researchers monitored</em> = geçmiş koşul.</p></div>
+      <button class="ireset">↺ Sıfırla</button>
+    </div>
+  </div>
+
+  <div class="trick">
+    <h4>Teknik 26 — Passive Conditional Tanıma</h4>
+    <div class="iquiz"><span class="iqlabel">ALIŞTIRMA</span>
+      <div class="istem">If proper safety protocols ___, such accidents ___ in the future.</div>
+      <div class="ioptions">
+        <button data-correct="true">are followed / can be prevented</button>
+        <button data-correct="false">will be followed / can prevent</button>
+        <button data-correct="false">followed / would prevent</button>
+        <button data-correct="false">had been followed / could have been prevented</button>
+        <button data-correct="false">are following / will prevent</button>
+      </div>
+      <div class="ianswer"><p><strong>Cevap: A — are followed / can be prevented</strong></p><p>First conditional + passive.</p></div>
+      <button class="ireset">↺ Sıfırla</button>
+    </div>
+  </div>
+
+  <div class="trick">
+    <h4>Teknik 27 — "Were + Subject + To + V1"</h4>
+    <div class="iquiz"><span class="iqlabel">ALIŞTIRMA</span>
+      <div class="istem">___ the volcano to erupt again, nearby villages would need to be evacuated.</div>
+      <div class="ioptions">
+        <button data-correct="true">Were</button>
+        <button data-correct="false">If</button>
+        <button data-correct="false">Had</button>
+        <button data-correct="false">Should</button>
+        <button data-correct="false">Unless</button>
+      </div>
+      <div class="ianswer"><p><strong>Cevap: A — Were</strong></p><p>Were + subject + to + V1.</p></div>
+      <button class="ireset">↺ Sıfırla</button>
+    </div>
+  </div>
+
+  <div class="trick">
+    <h4>Teknik 28 — "Should You Need": Resmî First Conditional</h4>
+    <div class="iquiz"><span class="iqlabel">ALIŞTIRMA</span>
+      <div class="istem">___ require further information, please do not hesitate to contact our office.</div>
+      <div class="ioptions">
+        <button data-correct="true">Should you</button>
+        <button data-correct="false">Would you</button>
+        <button data-correct="false">Were you</button>
+        <button data-correct="false">Had you</button>
+        <button data-correct="false">Unless you</button>
+      </div>
+      <div class="ianswer"><p><strong>Cevap: A — Should you</strong></p><p><em>Should you require</em> = resmî first conditional.</p></div>
+      <button class="ireset">↺ Sıfırla</button>
+    </div>
+  </div>
+
+  <div class="note" style="margin-top:24px">
+    <strong>Hatırlatma:</strong> Hiçbir kısayol tek başına cevabı garanti etmez. Kısayol <em>eleme</em> içindir; son kararı <em>bağlam</em> verir.
+  </div>
+</section>
+
+<!-- ============ PART 3 ============ -->
+<section class="part" id="part3">
+  <h2>BÖLÜM 3 — Soru Tiplerinde Conditionals</h2>
+
+  <h3>1. Grammar Gap-Filling</h3>
+  <p><strong>İpuçları:</strong> Zaman zarfı → if-clause formu → main clause formu → bağlaç anlamı → eleme.</p>
+  <div class="q">
+    <span class="qnum">Örnek</span>
+    <div class="stem">If the new regulations ___ into effect next month, many factories ___ their production methods.</div>
+    <ol class="options">
+      <li class="correct">come / will have to change</li>
+      <li>will come / have to change</li>
+      <li>came / would have to change</li>
+      <li>had come / would have had to change</li>
+      <li>come / had to change</li>
+    </ol>
+  </div>
+  <div class="answer-box"><span class="label">CEVAP A</span>
+    <p><em>next month</em> → first conditional → <em>If + present, will + V1</em>.</p>
+  </div>
+
+  <h3>2. Cloze Test</h3>
+  <div class="q">
+    <span class="qnum">Örnek</span>
+    <div class="stem">Many developing countries struggle to provide clean water. ___ they invest in modern infrastructure, the problem is likely to worsen over the next decade.</div>
+    <ol class="options">
+      <li class="correct">Unless</li>
+      <li>Even though</li>
+      <li>In case</li>
+      <li>Provided that</li>
+      <li>Whether or not</li>
+    </ol>
+  </div>
+  <div class="answer-box"><span class="label">CEVAP A</span><p>Olumsuz sonuç + olumlu eylem → <em>Unless</em>.</p></div>
+
+  <h3>3. Sentence Completion</h3>
+  <div class="q">
+    <span class="qnum">Örnek</span>
+    <div class="stem">If the company had invested in renewable energy a decade ago, ___.</div>
+    <ol class="options">
+      <li class="correct">it would be one of the leading green firms today</li>
+      <li>it will face serious financial difficulties next year</li>
+      <li>its competitors are currently ahead in the market</li>
+      <li>the government has offered generous subsidies</li>
+      <li>environmental regulations were not so strict then</li>
+    </ol>
+  </div>
+  <div class="answer-box"><span class="label">CEVAP A</span><p>Mixed 5a: <em>had invested + a decade ago</em> + <em>today</em>.</p></div>
+
+  <h3>4. EN→TR Translation</h3>
+  <div class="q">
+    <span class="qnum">Örnek</span>
+    <div class="stem">If the museum had been renovated earlier, it would attract far more tourists today.</div>
+    <ol class="options">
+      <li class="correct">Müze daha önce restore edilseydi, bugün çok daha fazla turist çekerdi.</li>
+      <li>Müze daha önce restore edilirse, bugün çok daha fazla turist çekecek.</li>
+      <li>Müze daha önce restore edilmiş olsa da, bugün çok daha fazla turist çekmiyor.</li>
+      <li>Müze bugün restore edilseydi, daha önce çok daha fazla turist çekerdi.</li>
+      <li>Müze daha önce restore edilmediği için bugün çok daha fazla turist çekiyor.</li>
+    </ol>
+  </div>
+  <div class="answer-box"><span class="label">CEVAP A</span><p>Mixed 5a: "-seydi … bugün -erdi".</p></div>
+
+  <h3>5. TR→EN Translation</h3>
+  <div class="q">
+    <span class="qnum">Örnek</span>
+    <div class="stem">Daha dikkatli olsaydı, dünkü toplantıda bu kadar hata yapmazdı.</div>
+    <ol class="options">
+      <li class="correct">If he were more careful, he wouldn't have made so many mistakes at yesterday's meeting.</li>
+      <li>If he had been more careful, he wouldn't make so many mistakes at yesterday's meeting.</li>
+      <li>If he is more careful, he won't make so many mistakes at yesterday's meeting.</li>
+      <li>Unless he were more careful, he would have made so many mistakes at yesterday's meeting.</li>
+      <li>Even if he had been more careful, he would have made so many mistakes at yesterday's meeting.</li>
+    </ol>
+  </div>
+  <div class="answer-box"><span class="label">CEVAP A</span><p>Mixed 5b: kişilik (were) + geçmiş sonuç.</p></div>
+
+  <h3>6. Closest Meaning</h3>
+  <div class="q">
+    <span class="qnum">Örnek</span>
+    <div class="stem">Unless the team members communicate effectively, the project will fail.</div>
+    <ol class="options">
+      <li class="correct">If the team members do not communicate effectively, the project will fail.</li>
+      <li>If the team members communicate effectively, the project will fail.</li>
+      <li>The project will fail even if the team members communicate effectively.</li>
+      <li>The team members will communicate effectively only if the project fails.</li>
+      <li>Provided that the team members communicate effectively, the project will fail.</li>
+    </ol>
+  </div>
+  <div class="answer-box"><span class="label">CEVAP A</span><p>Unless = if not.</p></div>
+
+  <h3>7. Dialogue Completion</h3>
+  <div class="q">
+    <span class="qnum">Örnek</span>
+    <div class="stem"><strong>A:</strong> I should have started earlier.<br>
+    <strong>B:</strong> ___ But there's no point in regretting it now.</div>
+    <ol class="options">
+      <li class="correct">If you had started earlier, you would have finished on time.</li>
+      <li>If you start earlier, you will finish on time.</li>
+      <li>Unless you started earlier, you would finish on time.</li>
+      <li>If you were starting earlier, you would finish on time.</li>
+      <li>Provided that you started earlier, you would have finished on time.</li>
+    </ol>
+  </div>
+  <div class="answer-box"><span class="label">CEVAP A</span><p>Geçmiş pişmanlık → third conditional.</p></div>
+
+  <h3>8. Paragraph Completion</h3>
+  <div class="q">
+    <span class="qnum">Örnek</span>
+    <div class="stem">Some argue that expanding public transport is the only viable solution. ___, congestion would continue to worsen.</div>
+    <ol class="options">
+      <li>Otherwise</li>
+      <li>Even so</li>
+      <li>In case</li>
+      <li>Provided that</li>
+      <li class="correct">Unless cities invest heavily in public transport</li>
+    </ol>
+  </div>
+  <div class="answer-box"><span class="label">CEVAP E</span><p>Olumsuz sonuç + eksik koşul → <em>Unless</em>.</p></div>
+
+  <h3>9. Reading Comprehension & 10. Irrelevant Sentence</h3>
+  <p>Parçadaki conditional cümleyi bul → real/unreal durumunu belirle → çıkarımı yap → aşırı genellemeleri ele.</p>
+
+  <div class="table-wrap"><table>
+    <tr><th>Soru Tipi</th><th>En Önemli İpucu</th></tr>
+    <tr><td>Gap-filling</td><td>Zaman zarfı + fiil formu</td></tr>
+    <tr><td>Cloze</td><td>Önceki/sonraki cümle</td></tr>
+    <tr><td>Sentence completion</td><td>Fiil formu + anlam yönü</td></tr>
+    <tr><td>EN→TR / TR→EN</td><td>"had ... today" gibi ipuçları</td></tr>
+    <tr><td>Closest meaning</td><td>Unless=if not, had=if had</td></tr>
+    <tr><td>Dialogue</td><td>Pişmanlık/tavsiye tonu</td></tr>
+    <tr><td>Paragraph</td><td>Boşluk öncesi/sonrası</td></tr>
+    <tr><td>Reading</td><td>Real/unreal + olasılık</td></tr>
+    <tr><td>Irrelevant</td><td>Konu değişikliği</td></tr>
+  </table></div>
+</section>
+
+<!-- ============ PART 4 ============ -->
+<section class="part" id="part4">
+  <h2>BÖLÜM 4 — Karşılaştırma Tabloları & Cheat Sheet</h2>
+
+  <h3>Tablo 1 — Ana Conditional Tipleri</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Tip</th><th>If-Clause</th><th>Main Clause</th><th>Örnek</th></tr>
+    <tr><td>Zero</td><td>Present</td><td>Present</td><td><em>If you heat ice, it melts.</em></td></tr>
+    <tr><td>First</td><td>Present</td><td>will + V1</td><td><em>If it rains, we will stay.</em></td></tr>
+    <tr><td>Second</td><td>Past (were)</td><td>would + V1</td><td><em>If I were rich, I would travel.</em></td></tr>
+    <tr><td>Third</td><td>Had + V3</td><td>would have + V3</td><td><em>If I had studied, I would have passed.</em></td></tr>
+    <tr><td>Mixed 5a</td><td>Had + V3</td><td>would + V1</td><td><em>If I had invested, I would be rich now.</em></td></tr>
+    <tr><td>Mixed 5b</td><td>Past (were)</td><td>would have + V3</td><td><em>If she were patient, she wouldn't have lost her temper yesterday.</em></td></tr>
+  </table></div>
+
+  <h3>Tablo 2 — If'li ve If'siz Yapılar</h3>
+  <div class="table-wrap"><table>
+    <tr><th>If'li</th><th>If'siz</th><th>Anlam</th></tr>
+    <tr><td>If I had known</td><td><strong>Had I known</strong></td><td>Bilseydim (geçmiş)</td></tr>
+    <tr><td>If I were you</td><td><strong>Were I you</strong></td><td>Senin yerinde olsam</td></tr>
+    <tr><td>If it were not for</td><td><strong>Were it not for</strong></td><td>Olmasaydı (şimdi)</td></tr>
+    <tr><td>If it had not been for</td><td><strong>Had it not been for</strong></td><td>Olmasaydı (geçmiş)</td></tr>
+    <tr><td>If you should need</td><td><strong>Should you need</strong></td><td>İhtiyacın olursa</td></tr>
+    <tr><td>If he were to come</td><td><strong>Were he to come</strong></td><td>Gelseydi (düşük olasılık)</td></tr>
+    <tr><td>If ... not</td><td><strong>Unless</strong></td><td>…medikçe</td></tr>
+    <tr><td>If not</td><td><strong>Otherwise</strong></td><td>Aksi halde</td></tr>
+  </table></div>
+
+  <h3>Tablo 3 — Present vs. Past Unreal</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Özellik</th><th>Present Unreal (Second)</th><th>Past Unreal (Third)</th></tr>
+    <tr><td>If-clause</td><td>Past simple (were)</td><td>Past perfect (had + V3)</td></tr>
+    <tr><td>Main clause</td><td>would + V1</td><td>would have + V3</td></tr>
+    <tr><td>Zaman İpucu</td><td>now, today</td><td>yesterday, last year, ago</td></tr>
+  </table></div>
+
+  <h3>Tablo 4 — Mixed Kombinasyonları</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Tip</th><th>If-Clause</th><th>Main Clause</th><th>İpucu</th></tr>
+    <tr><td>5a</td><td>Past perfect</td><td>would + V1</td><td>"in 2015" + "now"</td></tr>
+    <tr><td>5b</td><td>Past simple</td><td>would have + V3</td><td>"yesterday" + past simple</td></tr>
+  </table></div>
+
+  <h3>Tablo 5 — Conditional Conjunctions</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Bağlaç</th><th>Anlam</th><th>Örnek</th></tr>
+    <tr><td>Unless</td><td>…medikçe</td><td><em>Unless you hurry, you'll be late.</em></td></tr>
+    <tr><td>Provided that</td><td>…şartıyla</td><td><em>You can go provided that you finish.</em></td></tr>
+    <tr><td>As long as</td><td>…dığı sürece</td><td><em>As long as you practice, you'll improve.</em></td></tr>
+    <tr><td>In case</td><td>…diye</td><td><em>Take an umbrella in case it rains.</em></td></tr>
+    <tr><td>Even if</td><td>…olsa bile</td><td><em>Even if it rains, we'll go.</em></td></tr>
+    <tr><td>Even though</td><td>…rağmen</td><td><em>Even though it rained, we went.</em></td></tr>
+    <tr><td>Only if</td><td>Ancak …şartıyla</td><td><em>You can pass only if you study.</em></td></tr>
+    <tr><td>If only</td><td>Keşke</td><td><em>If only I had studied!</em></td></tr>
+    <tr><td>Whether or not</td><td>…olsa da olmasa da</td><td><em>Whether or not you agree, the decision stands.</em></td></tr>
+    <tr><td>Otherwise</td><td>Aksi halde</td><td><em>Leave now; otherwise, you'll miss it.</em></td></tr>
+    <tr><td>But for</td><td>…olmasaydı</td><td><em>But for your help, I'd fail.</em></td></tr>
+  </table></div>
+
+  <h3>Tablo 6 — Modal Kombinasyonları</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Modal</th><th>Anlam</th><th>Örnek</th></tr>
+    <tr><td>would have + V3</td><td>Geçmiş varsayım sonucu</td><td><em>If I had known, I would have called.</em></td></tr>
+    <tr><td>could have + V3</td><td>Geçmiş yetenek/olasılık</td><td><em>If he had tried, he could have won.</em></td></tr>
+    <tr><td>might have + V3</td><td>Geçmiş düşük olasılık</td><td><em>She might have caught it.</em></td></tr>
+    <tr><td>must have + V3</td><td>Geçmiş güçlü çıkarım</td><td><em>He must have seen it.</em></td></tr>
+    <tr><td>should have + V3</td><td>Geçmiş tavsiye/eleştiri</td><td><em>You should have arrived by now.</em></td></tr>
+  </table></div>
+
+  <h3>Tablo 7 — Sık Karıştırılanlar</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Yapı 1</th><th>Yapı 2</th><th>Fark</th></tr>
+    <tr><td>Unless</td><td>If not</td><td>Aynı anlam; unless + olumlu</td></tr>
+    <tr><td>Even if</td><td>Even though</td><td>Hipotetik vs. gerçek</td></tr>
+    <tr><td>In case</td><td>If</td><td>Önlem vs. koşul</td></tr>
+    <tr><td>Only if</td><td>If only</td><td>Kısıtlayıcı vs. keşke</td></tr>
+    <tr><td>Wish + past</td><td>Wish + past perfect</td><td>Şimdi vs. geçmiş</td></tr>
+  </table></div>
+
+  <h3>Tablo 8 — Inversion Kalıpları</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Normal</th><th>Inversion</th><th>Örnek</th></tr>
+    <tr><td>If I had known</td><td>Had I known</td><td><em>Had I known, I would have called.</em></td></tr>
+    <tr><td>If I were you</td><td>Were I you</td><td><em>Were I you, I would wait.</em></td></tr>
+    <tr><td>If it were not for</td><td>Were it not for</td><td><em>Were it not for her, I'd fail.</em></td></tr>
+    <tr><td>If it had not been for</td><td>Had it not been for</td><td><em>Had it not been for the alarm, the fire would have spread.</em></td></tr>
+    <tr><td>If you should need</td><td>Should you need</td><td><em>Should you need help, call me.</em></td></tr>
+  </table></div>
+
+  <h3>Tablo 9 — Türkçe-İngilizce Çeviri Tuzakları</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Türkçe</th><th>Yanlış</th><th>Doğru</th></tr>
+    <tr><td>"…seydi …erdi" (şimdi)</td><td><em>If I would have...</em></td><td><em>If I had..., I would...</em></td></tr>
+    <tr><td>"…seydi …erdi" (geçmiş)</td><td><em>If I had..., I would...</em></td><td><em>If I had..., I would have...</em></td></tr>
+    <tr><td>"Zengin olsaydım"</td><td><em>If I would be rich</em></td><td><em>If I were rich</em></td></tr>
+    <tr><td>"Acele etmezsen"</td><td><em>Unless you don't hurry</em></td><td><em>Unless you hurry</em></td></tr>
+    <tr><td>"Yağmur yağar diye"</td><td><em>If it rains</em></td><td><em>In case it rains</em></td></tr>
+    <tr><td>"Yağmur yağsa bile"</td><td><em>Even though it rains</em></td><td><em>Even if it rains</em></td></tr>
+  </table></div>
+
+  <h3>Tablo 10 — Wish / If Only / Would Rather / It's Time</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Yapı</th><th>Zaman</th><th>Form</th><th>Örnek</th></tr>
+    <tr><td>Wish</td><td>Şimdi</td><td>wish + past</td><td><em>I wish I had more time.</em></td></tr>
+    <tr><td>Wish</td><td>Geçmiş</td><td>wish + past perfect</td><td><em>I wish I had studied.</em></td></tr>
+    <tr><td>Wish</td><td>Gelecek</td><td>wish + would</td><td><em>I wish it would stop raining.</em></td></tr>
+    <tr><td>Would rather</td><td>Başkası</td><td>+ subject + past</td><td><em>I would rather you stayed.</em></td></tr>
+    <tr><td>It's high time</td><td>Gecikmiş</td><td>+ subject + past</td><td><em>It's high time you left.</em></td></tr>
+  </table></div>
+
+  <div class="cheatsheet" id="cheatsheet">
+    <h3>📋 Cheat Sheet — Sınav Öncesi Tek Sayfa</h3>
+
+    <h4>Formüller</h4>
+    <div class="formula">Zero: Present → Present</div>
+    <div class="formula">First: Present → will + V1</div>
+    <div class="formula">Second: Past (were) → would + V1</div>
+    <div class="formula">Third: Had + V3 → would have + V3</div>
+    <div class="formula">Mixed 5a: Had + V3 → would + V1 (now)</div>
+    <div class="formula">Mixed 5b: Past (were) → would have + V3 (yesterday)</div>
+
+    <h4>Inversion</h4>
+    <div class="formula">Had I known = If I had known</div>
+    <div class="formula">Were I you = If I were you</div>
+    <div class="formula">Were it not for = If it were not for</div>
+    <div class="formula">Had it not been for = If it had not been for</div>
+    <div class="formula">Should you need = If you should need</div>
+
+    <h4>Eşdeğerler</h4>
+    <div class="formula">Unless = If not</div>
+    <div class="formula">But for = If it were not for</div>
+    <div class="formula">Without = If it were not for</div>
+    <div class="formula">Otherwise = If not</div>
+
+    <h4>Sık Karıştırılanlar</h4>
+    <ul style="margin:6px 0 0; font-size:14px;">
+      <li><strong>Even if</strong> (hipotetik) vs. <strong>Even though</strong> (gerçek)</li>
+      <li><strong>In case</strong> (önlem) vs. <strong>If</strong> (koşul)</li>
+      <li><strong>Only if</strong> (kısıtlayıcı) vs. <strong>If only</strong> (keşke)</li>
+      <li><strong>Wish + past</strong> (şimdi) vs. <strong>Wish + past perfect</strong> (geçmiş)</li>
+    </ul>
+
+    <h4>Zaman Zarfları</h4>
+    <ul style="margin:6px 0 0; font-size:14px;">
+      <li><em>now, today</em> → present sonuç (mixed 5a)</li>
+      <li><em>yesterday, last year, ago</em> → past sonuç (third/mixed 5b)</li>
+      <li><em>tomorrow, next week</em> → first conditional</li>
+      <li><em>usually, always</em> → zero conditional</li>
+    </ul>
+
+    <h4>Yasaklar</h4>
+    <ul style="margin:6px 0 0; font-size:14px;">
+      <li>❌ If-clause'ta <em>will</em></li>
+      <li>❌ If-clause'ta <em>would</em> (nazik rica hariç)</li>
+      <li>❌ <em>Unless + not</em></li>
+      <li>❌ <em>In case + will</em></li>
+      <li>❌ <em>Wish + will</em></li>
+      <li>❌ <em>It's high time + present</em></li>
+    </ul>
+
+    <h4>Hızlı Çözüm Sırası</h4>
+    <ol style="margin:6px 0 0; font-size:14px;">
+      <li>Zaman zarfını bul</li>
+      <li>Fiil formunu kontrol et</li>
+      <li>Bağlacın anlamını test et</li>
+      <li>Zaman uyumsuzluğunu ele</li>
+      <li>Aşırı genellemeleri ele</li>
+      <li>Bağlamı son kez oku</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ PART 5: MOCK ============ -->
+<section class="part" id="part5">
+  <h2>BÖLÜM 5 — 50 Soruluk Mock Sınav</h2>
+  <div class="note">
+    <strong>Sınav bilgileri:</strong> 50 soru • Önerilen süre 65 dakika • Her doğru 2 puan • Maksimum 100 • Negatif puanlama yok.<br>
+    Bu, <em>Conditionals odaklı bir pratik sınavdır</em>; resmî YDT değildir. Cevaplar Bölüm 6'da.
+  </div>
+
+  <h3>Section I — Grammar Gap-Filling (1–10)</h3>
+  <div class="q"><span class="qnum">1</span><div class="stem">If you ___ water to 100 °C at sea level, it ___.</div>
+  <ol class="options"><li>heat / boils</li><li>will heat / boils</li><li>heated / would boil</li><li>heat / will boil</li><li>had heated / would have boiled</li></ol></div>
+  <div class="q"><span class="qnum">2</span><div class="stem">If the company ___ the new policy next month, employees ___ more flexibility.</div>
+  <ol class="options"><li>adopts / will gain</li><li>will adopt / gain</li><li>adopted / would gain</li><li>had adopted / would have gained</li><li>adopts / gained</li></ol></div>
+  <div class="q"><span class="qnum">3</span><div class="stem">If I ___ the CEO of a major firm, I ___ the strategy completely.</div>
+  <ol class="options"><li>were / would change</li><li>am / will change</li><li>had been / would have changed</li><li>were / will change</li><li>would be / changed</li></ol></div>
+  <div class="q"><span class="qnum">4</span><div class="stem">If the research team ___ the data more carefully, they ___ such an error.</div>
+  <ol class="options"><li>had analyzed / wouldn't have made</li><li>analyzed / wouldn't make</li><li>analyze / won't make</li><li>had analyzed / wouldn't make</li><li>would analyze / hadn't made</li></ol></div>
+  <div class="q"><span class="qnum">5</span><div class="stem">If the city ___ in public transport ten years ago, traffic ___ so severe today.</div>
+  <ol class="options"><li>had invested / wouldn't be</li><li>invested / wouldn't be</li><li>had invested / wouldn't have been</li><li>invests / won't be</li><li>would invest / weren't</li></ol></div>
+  <div class="q"><span class="qnum">6</span><div class="stem">Unless the government ___ stricter measures, air pollution ___ to increase.</div>
+  <ol class="options"><li>introduces / will continue</li><li>doesn't introduce / will continue</li><li>will introduce / continues</li><li>introduced / would continue</li><li>had introduced / would have continued</li></ol></div>
+  <div class="q"><span class="qnum">7</span><div class="stem">The scholarship will be renewed ___ the student maintains a GPA above 3.5.</div>
+  <ol class="options"><li>provided that</li><li>in case</li><li>even if</li><li>unless</li><li>otherwise</li></ol></div>
+  <div class="q"><span class="qnum">8</span><div class="stem">___ the researchers documented their findings earlier, the discovery ___ by another team.</div>
+  <ol class="options"><li>Had / might have been made</li><li>If / might be made</li><li>Were / might have been made</li><li>Should / might be made</li><li>Unless / might have been made</li></ol></div>
+  <div class="q"><span class="qnum">9</span><div class="stem">___ the timely intervention, the patient ___.</div>
+  <ol class="options"><li>Were it not for / would not survive</li><li>Had it not been for / would not have survived</li><li>But for / will not survive</li><li>If it were not for / would not have survived</li><li>Without / does not survive</li></ol></div>
+  <div class="q"><span class="qnum">10</span><div class="stem">___ the weather ___ worse tomorrow, the expedition will continue.</div>
+  <ol class="options"><li>Even if / gets</li><li>Even though / gets</li><li>Even if / will get</li><li>Even though / will get</li><li>Unless / gets</li></ol></div>
+
+  <h3>Section II — Sentence Completion (11–18)</h3>
+  <div class="q"><span class="qnum">11</span><div class="stem">If the museum had been renovated a decade ago, ___.</div>
+  <ol class="options"><li>it would attract far more tourists today</li><li>it will attract far more tourists next year</li><li>its visitors are currently disappointed</li><li>the government has offered generous funding</li><li>the renovation was completed on time</li></ol></div>
+  <div class="q"><span class="qnum">12</span><div class="stem">___ that the medication could interact dangerously, the doctor would never have prescribed it.</div>
+  <ol class="options"><li>Had she known</li><li>If she knows</li><li>Were she to know</li><li>Should she know</li><li>Unless she knew</li></ol></div>
+  <div class="q"><span class="qnum">13</span><div class="stem">Unless the negotiations ___ soon, ___.</div>
+  <ol class="options"><li>are concluded / the two countries will fail to reach a peace agreement</li><li>will be concluded / the two countries fail to reach a peace agreement</li><li>concluded / the two countries would fail to reach a peace agreement</li><li>had been concluded / the two countries would have failed to reach a peace agreement</li><li>are concluded / the two countries failed to reach a peace agreement</li></ol></div>
+  <div class="q"><span class="qnum">14</span><div class="stem">If she ___ more confident, she ___ for the promotion last month.</div>
+  <ol class="options"><li>were / would have applied</li><li>had been / would apply</li><li>is / will apply</li><li>would be / had applied</li><li>were / would apply</li></ol></div>
+  <div class="q"><span class="qnum">15</span><div class="stem">Had the early settlers ___ to adapt, they ___ the first winter.</div>
+  <ol class="options"><li>not learned / would not have survived</li><li>not learned / would not survive</li><li>didn't learn / would not have survived</li><li>not learn / will not survive</li><li>not been learning / would not survive</li></ol></div>
+  <div class="q"><span class="qnum">16</span><div class="stem">___, the project would have been completed on time.</div>
+  <ol class="options"><li>If the team had received sufficient funding</li><li>If the team received sufficient funding</li><li>Unless the team receives sufficient funding</li><li>Should the team receive sufficient funding</li><li>Were the team to receive sufficient funding</li></ol></div>
+  <div class="q"><span class="qnum">17</span><div class="stem">If the government ___ the new law earlier, ___.</div>
+  <ol class="options"><li>had passed / the country wouldn't be facing such a crisis today</li><li>passed / the country wouldn't be facing such a crisis today</li><li>had passed / the country wouldn't have faced such a crisis today</li><li>passes / the country won't face such a crisis today</li><li>would pass / the country weren't facing such a crisis today</li></ol></div>
+  <div class="q"><span class="qnum">18</span><div class="stem">___ the company invests heavily in renewable energy, ___.</div>
+  <ol class="options"><li>Unless / it will struggle to remain competitive</li><li>If / it would have struggled to remain competitive</li><li>Provided that / it would have struggled to remain competitive</li><li>Even if / it will not struggle to remain competitive</li><li>In case / it struggled to remain competitive</li></ol></div>
+
+  <h3>Section III — Closest Meaning (19–24)</h3>
+  <div class="q"><span class="qnum">19</span><div class="stem">Unless the team members communicate effectively, the project will fail.</div>
+  <ol class="options"><li>If the team members do not communicate effectively, the project will fail.</li><li>If the team members communicate effectively, the project will fail.</li><li>The project will fail even if the team members communicate effectively.</li><li>The team members will communicate effectively only if the project fails.</li><li>Provided that the team members communicate effectively, the project will fail.</li></ol></div>
+  <div class="q"><span class="qnum">20</span><div class="stem">Had I known about the heavy traffic, I would have left home earlier.</div>
+  <ol class="options"><li>If I had known about the heavy traffic, I would have left home earlier.</li><li>If I knew about the heavy traffic, I would leave home earlier.</li><li>I knew about the heavy traffic, so I left home earlier.</li><li>Unless I had known about the heavy traffic, I would have left home earlier.</li><li>Even if I had known about the heavy traffic, I would not have left home earlier.</li></ol></div>
+  <div class="q"><span class="qnum">21</span><div class="stem">But for your continuous support, I would have given up long ago.</div>
+  <ol class="options"><li>If it had not been for your continuous support, I would have given up long ago.</li><li>If it were not for your continuous support, I would give up.</li><li>Your continuous support made me give up long ago.</li><li>Even though you supported me, I gave up long ago.</li><li>Unless you had supported me, I would give up.</li></ol></div>
+  <div class="q"><span class="qnum">22</span><div class="stem">Even if it rains heavily tomorrow, the outdoor event will go ahead.</div>
+  <ol class="options"><li>The outdoor event will go ahead as scheduled regardless of whether it rains.</li><li>The outdoor event will go ahead because it will not rain.</li><li>Although it rained heavily yesterday, the event went ahead.</li><li>The outdoor event will be cancelled if it rains.</li><li>If it does not rain, the event will go ahead.</li></ol></div>
+  <div class="q"><span class="qnum">23</span><div class="stem">If she had taken the earlier flight, she would be in London now.</div>
+  <ol class="options"><li>She took the earlier flight, so she is in London now.</li><li>She did not take the earlier flight, so she is not in London now.</li><li>She is in London now because she took the earlier flight.</li><li>She will be in London now if she takes the earlier flight.</li><li>If she took the earlier flight, she would have been in London now.</li></ol></div>
+  <div class="q"><span class="qnum">24</span><div class="stem">Only if you work hard can you succeed in this competitive field.</div>
+  <ol class="options"><li>You can succeed in this competitive field only if you work hard.</li><li>You cannot succeed even if you work hard.</li><li>If only you worked hard, you could succeed.</li><li>You will succeed whether or not you work hard.</li><li>Unless you work hard, you can still succeed.</li></ol></div>
+
+  <h3>Section IV — Translation (25–30)</h3>
+  <div class="q"><span class="qnum">25</span><div class="stem">If the government had invested in education decades ago, the country would be far more competitive today.</div>
+  <ol class="options"><li>Hükümet on yıllar önce eğitime yatırım yapsaydı, ülke bugün çok daha rekabetçi olurdu.</li><li>Hükümet on yıllar önce eğitime yatırım yaparsa, ülke bugün çok daha rekabetçi olacak.</li><li>Hükümet on yıllar önce eğitime yatırım yapmış olsa da, ülke bugün çok daha rekabetçi değil.</li><li>Hükümet bugün eğitime yatırım yapsaydı, ülke on yıllar önce çok daha rekabetçi olurdu.</li><li>Hükümet on yıllar önce eğitime yatırım yapmadığı için ülke bugün çok daha rekabetçi.</li></ol></div>
+  <div class="q"><span class="qnum">26</span><div class="stem">Had it not been for the swift response of the emergency services, the flood would have claimed many more lives.</div>
+  <ol class="options"><li>Acil servislerin hızlı müdahalesi olmasaydı, sel çok daha fazla can kaybına yol açardı.</li><li>Acil servisler hızlı müdahale etmediği için sel çok daha fazla can kaybına yol açtı.</li><li>Acil servisler hızlı müdahale etmesine rağmen sel çok daha fazla can kaybına yol açmadı.</li><li>Acil servislerin hızlı müdahalesi sayesinde sel çok daha fazla can kaybına yol açtı.</li><li>Acil servisler hızlı müdahale etse de sel çok daha fazla can kaybına yol açmayacak.</li></ol></div>
+  <div class="q"><span class="qnum">27</span><div class="stem">Unless stricter regulations are introduced, air pollution will continue to worsen in major cities.</div>
+  <ol class="options"><li>Daha sıkı düzenlemeler getirilmezse, büyük şehirlerde hava kirliliği kötüleşmeye devam edecek.</li><li>Daha sıkı düzenlemeler getirildiği sürece, hava kirliliği kötüleşmeye devam edecek.</li><li>Daha sıkı düzenlemeler getirilse bile, hava kirliliği kötüleşmeye devam edecek.</li><li>Daha sıkı düzenlemeler getirilmediği için hava kirliliği kötüleşmeye devam ediyor.</li><li>Daha sıkı düzenlemeler getirilirse, hava kirliliği kötüleşmeye devam edecek.</li></ol></div>
+  <div class="q"><span class="qnum">28</span><div class="stem">Daha dikkatli olsaydı, dünkü toplantıda bu kadar hata yapmazdı.</div>
+  <ol class="options"><li>If he were more careful, he wouldn't have made so many mistakes at yesterday's meeting.</li><li>If he had been more careful, he wouldn't make so many mistakes at yesterday's meeting.</li><li>If he is more careful, he won't make so many mistakes at yesterday's meeting.</li><li>Unless he were more careful, he would have made so many mistakes at yesterday's meeting.</li><li>Even if he had been more careful, he would have made so many mistakes at yesterday's meeting.</li></ol></div>
+  <div class="q"><span class="qnum">29</span><div class="stem">Hükümet bu yasayı on yıl önce çıkarsaydı, ülke bugün bu kadar ciddi bir çevre kriziyle karşılaşmazdı.</div>
+  <ol class="options"><li>If the government had passed this law ten years ago, the country wouldn't be facing such a serious environmental crisis today.</li><li>If the government passed this law ten years ago, the country wouldn't face such a crisis today.</li><li>If the government had passed this law ten years ago, the country wouldn't have faced such a crisis today.</li><li>Unless the government had passed this law ten years ago, the country would be facing such a crisis today.</li><li>Even if the government had passed this law ten years ago, the country wouldn't be facing such a crisis today.</li></ol></div>
+  <div class="q"><span class="qnum">30</span><div class="stem">Ancak sıkı çalışırsan bu rekabetçi alanda başarılı olabilirsin.</div>
+  <ol class="options"><li>Only if you work hard can you succeed in this competitive field.</li><li>If only you worked hard, you could succeed in this competitive field.</li><li>You can succeed in this competitive field even if you don't work hard.</li><li>Unless you work hard, you can still succeed in this competitive field.</li><li>Provided that you worked hard, you would have succeeded in this competitive field.</li></ol></div>
+
+  <h3>Section V — Dialogue Completion (31–35)</h3>
+  <div class="q"><span class="qnum">31</span><div class="stem"><strong>A:</strong> I should have started preparing earlier.<br><strong>B:</strong> ___ But there's no point in regretting it now.</div>
+  <ol class="options"><li>If you had started earlier, you would have finished on time.</li><li>If you start earlier, you will finish on time.</li><li>Unless you started earlier, you would finish on time.</li><li>If you were starting earlier, you would finish on time.</li><li>Provided that you started earlier, you would have finished on time.</li></ol></div>
+  <div class="q"><span class="qnum">32</span><div class="stem"><strong>A:</strong> I sometimes wonder what my life would be like if I had chosen medicine instead of engineering.<br><strong>B:</strong> ___<br><strong>A:</strong> That's an interesting way to look at it.</div>
+  <ol class="options"><li>You would probably be working in a hospital now, but you might also be under constant stress.</li><li>You will probably work in a hospital if you choose medicine.</li><li>Unless you had chosen medicine, you would be under constant stress.</li><li>If you chose medicine, you would have been working in a hospital now.</li><li>You would have worked in a hospital if you had chosen medicine instead.</li></ol></div>
+  <div class="q"><span class="qnum">33</span><div class="stem"><strong>A:</strong> The company is losing market share. What should we do?<br><strong>B:</strong> ___<br><strong>A:</strong> I agree. Without innovation, no company can survive.</div>
+  <ol class="options"><li>If we had invested in research and development earlier, we wouldn't be in this situation now.</li><li>If we invest in research and development, we would have avoided this situation.</li><li>Unless we invested in research and development, we will lose even more market share.</li><li>Even if we had invested in research and development, we would be in this situation.</li><li>Provided that we invest in research and development, we would have survived.</li></ol></div>
+  <div class="q"><span class="qnum">34</span><div class="stem"><strong>A:</strong> Isn't Japan very expensive?<br><strong>B:</strong> ___<br><strong>A:</strong> That makes sense. Booking early really does make a difference.</div>
+  <ol class="options"><li>It would be expensive if I didn't book my flights and accommodation months in advance.</li><li>It will be expensive unless I booked my flights and accommodation months in advance.</li><li>It would have been expensive if I hadn't booked my flights and accommodation months in advance.</li><li>It is expensive even if I book my flights and accommodation months in advance.</li><li>It would be expensive provided that I booked my flights and accommodation months in advance.</li></ol></div>
+  <div class="q"><span class="qnum">35</span><div class="stem"><strong>A:</strong> Do you think the new manager will be able to turn the company around?<br><strong>B:</strong> ___<br><strong>A:</strong> I hope you're right.</div>
+  <ol class="options"><li>If she had more experience in crisis management, she would stand a much better chance.</li><li>If she has more experience in crisis management, she would have stood a much better chance.</li><li>Unless she had more experience in crisis management, she will stand a better chance.</li><li>Even if she had more experience in crisis management, she wouldn't stand a better chance.</li><li>Provided that she had more experience in crisis management, she will stand a better chance.</li></ol></div>
+
+  <h3>Section VI — Paragraph Completion (36–40)</h3>
+  <div class="q"><span class="qnum">36</span><div class="stem">Some argue that expanding public transport is the only viable long-term solution. ___, congestion would continue to worsen, regardless of how many new roads are built.</div>
+  <ol class="options"><li>Otherwise</li><li>Even so</li><li>In case</li><li>Provided that</li><li>Unless cities invest heavily in public transport</li></ol></div>
+  <div class="q"><span class="qnum">37</span><div class="stem">Fleming had been studying bacteria for years before he noticed the mold's effect. ___, he might never have recognized the significance of what he saw.</div>
+  <ol class="options"><li>Had he not been so observant and prepared</li><li>If he was not so observant and prepared</li><li>Unless he were so observant and prepared</li><li>Should he not be so observant and prepared</li><li>Even if he had not been so observant and prepared</li></ol></div>
+  <div class="q"><span class="qnum">38</span><div class="stem">Many developing countries struggle to provide clean water to their populations. ___ they invest in modern infrastructure, the problem is likely to worsen over the next decade.</div>
+  <ol class="options"><li>Unless</li><li>Even though</li><li>In case</li><li>Provided that</li><li>Whether or not</li></ol></div>
+  <div class="q"><span class="qnum">39</span><div class="stem">Some scholars argue that a combination of factors — drought, invasion, and internal rebellion — brought about the collapse. ___, the argument goes, the civilizations might have endured longer.</div>
+  <ol class="options"><li>Had any one of these factors been absent</li><li>If any one of these factors is absent</li><li>Unless any one of these factors was absent</li><li>Should any one of these factors be absent</li><li>Even if any one of these factors had been absent</li></ol></div>
+  <div class="q"><span class="qnum">40</span><div class="stem">The invention of the printing press transformed European society. ___, the Reformation might have taken a very different course.</div>
+  <ol class="options"><li>Had the press not been invented</li><li>If the press was not invented</li><li>Unless the press were invented</li><li>Should the press not be invented</li><li>Even if the press had not been invented</li></ol></div>
+
+  <h3>Section VII — Cloze Test (41–45)</h3>
+  <div class="q"><span class="qnum">Parça</span><div class="stem">A massive asteroid struck the Earth around 66 million years ago. <strong>(41) ___</strong> this impact had not occurred, the dinosaurs might still be the dominant species today. The dust cloud blocked sunlight for months, <strong>(42) ___</strong> photosynthesis to collapse. Smaller mammals, which could burrow underground, managed to endure. <strong>(43) ___</strong> they had been larger and more specialized, they would probably have perished as well. Some scientists argue that <strong>(44) ___</strong> the asteroid had struck a few minutes earlier or later, it might have landed in the deep ocean, and the extinction event <strong>(45) ___</strong> far less severe.</div></div>
+  <div class="q"><span class="qnum">41</span><ol class="options"><li>If</li><li>Had</li><li>Were</li><li>Should</li><li>Unless</li></ol></div>
+  <div class="q"><span class="qnum">42</span><ol class="options"><li>causing</li><li>caused</li><li>to cause</li><li>having caused</li><li>causes</li></ol></div>
+  <div class="q"><span class="qnum">43</span><ol class="options"><li>If</li><li>Unless</li><li>Had</li><li>Were</li><li>Should</li></ol></div>
+  <div class="q"><span class="qnum">44</span><ol class="options"><li>if</li><li>unless</li><li>even if</li><li>provided that</li><li>in case</li></ol></div>
+  <div class="q"><span class="qnum">45</span><ol class="options"><li>would have been</li><li>would be</li><li>will be</li><li>had been</li><li>has been</li></ol></div>
+
+  <h3>Section VIII — Reading (46–50)</h3>
+  <div class="note" style="background:#fafafa;border-left-color:#888">
+    <strong>Parça:</strong> The introduction of remote work technologies has fundamentally changed the way many companies operate. If these tools had not been developed, businesses would have been forced to maintain large, expensive office spaces. Today, however, many firms operate with significantly smaller physical footprints. Some economists argue that if remote work had become widespread a decade earlier, urban real estate markets in major cities would look very different today. Yet not all consequences have been positive. Employees who work from home often report feeling isolated, and some studies suggest that if companies do not address this issue, they may face higher turnover rates in the future. Had organizations recognized the importance of social connection earlier, they might have designed remote work policies that better support employee well-being. Businesses that fail to adapt will likely struggle to attract top talent.
+  </div>
+  <div class="q"><span class="qnum">46</span><div class="stem">According to the passage, if remote work technologies had not been developed, companies would have ___.</div>
+  <ol class="options"><li>invested more in employee development</li><li>needed larger and more costly office spaces</li><li>reduced their physical footprints</li><li>developed new technologies more quickly</li><li>operated with fewer employees</li></ol></div>
+  <div class="q"><span class="qnum">47</span><div class="stem">It can be inferred from the passage that urban real estate markets in major cities ___.</div>
+  <ol class="options"><li>have already been transformed by remote work</li><li>would be different today if remote work had become widespread earlier</li><li>will collapse if remote work continues to spread</li><li>are unaffected by the rise of remote work</li><li>have always been influenced by technological change</li></ol></div>
+  <div class="q"><span class="qnum">48</span><div class="stem">According to the passage, some studies suggest that companies may face higher turnover rates ___.</div>
+  <ol class="options"><li>if they invest too much in employee development</li><li>unless they address the issue of employee isolation</li><li>because they have reduced their physical footprints</li><li>even if they support employee well-being</li><li>if they fail to adopt remote work technologies</li></ol></div>
+  <div class="q"><span class="qnum">49</span><div class="stem">The passage implies that if organizations had recognized the importance of social connection earlier, they ___.</div>
+  <ol class="options"><li>would have designed better remote work policies</li><li>would not have adopted remote work at all</li><li>would have faced fewer financial difficulties</li><li>would have invested more in office spaces</li><li>would not have needed to address employee isolation</li></ol></div>
+  <div class="q"><span class="qnum">50</span><div class="stem">Which of the following best summarizes the main idea of the passage?</div>
+  <ol class="options"><li>Remote work technologies have both benefits and challenges, and companies must adapt to survive.</li><li>Remote work technologies should never have been developed because of their negative effects.</li><li>Large office spaces are essential for employee productivity and well-being.</li><li>Urban real estate markets will collapse as remote work becomes more common.</li><li>Employees who work from home are always more productive than office workers.</li></ol></div>
+</section>
+
+<!-- ============ PART 6: ANSWERS ============ -->
+<section class="part" id="part6">
+  <h2>BÖLÜM 6 — Cevap Anahtarı ve Detaylı Analiz</h2>
+
+  <div class="note"><strong>Uyarı:</strong> Aşağıda cevaplar ve açıklamalar var. Sınavı çözmeden bakma.</div>
+
+  <h3>A. Cevap Anahtarı</h3>
+  <div class="table-wrap"><table>
+    <tr><th>No</th><th>Cevap</th><th>No</th><th>Cevap</th><th>No</th><th>Cevap</th><th>No</th><th>Cevap</th><th>No</th><th>Cevap</th></tr>
+    <tr><td>1</td><td><strong>A</strong></td><td>11</td><td><strong>A</strong></td><td>21</td><td><strong>A</strong></td><td>31</td><td><strong>A</strong></td><td>41</td><td><strong>B</strong></td></tr>
+    <tr><td>2</td><td><strong>A</strong></td><td>12</td><td><strong>A</strong></td><td>22</td><td><strong>A</strong></td><td>32</td><td><strong>A</strong></td><td>42</td><td><strong>A</strong></td></tr>
+    <tr><td>3</td><td><strong>A</strong></td><td>13</td><td><strong>A</strong></td><td>23</td><td><strong>B</strong></td><td>33</td><td><strong>A</strong></td><td>43</td><td><strong>A</strong></td></tr>
+    <tr><td>4</td><td><strong>A</strong></td><td>14</td><td><strong>A</strong></td><td>24</td><td><strong>A</strong></td><td>34</td><td><strong>A</strong></td><td>44</td><td><strong>A</strong></td></tr>
+    <tr><td>5</td><td><strong>A</strong></td><td>15</td><td><strong>A</strong></td><td>25</td><td><strong>A</strong></td><td>35</td><td><strong>A</strong></td><td>45</td><td><strong>A</strong></td></tr>
+    <tr><td>6</td><td><strong>A</strong></td><td>16</td><td><strong>A</strong></td><td>26</td><td><strong>A</strong></td><td>36</td><td><strong>E</strong></td><td>46</td><td><strong>B</strong></td></tr>
+    <tr><td>7</td><td><strong>A</strong></td><td>17</td><td><strong>A</strong></td><td>27</td><td><strong>A</strong></td><td>37</td><td><strong>A</strong></td><td>47</td><td><strong>B</strong></td></tr>
+    <tr><td>8</td><td><strong>A</strong></td><td>18</td><td><strong>A</strong></td><td>28</td><td><strong>A</strong></td><td>38</td><td><strong>A</strong></td><td>48</td><td><strong>B</strong></td></tr>
+    <tr><td>9</td><td><strong>B</strong></td><td>19</td><td><strong>A</strong></td><td>29</td><td><strong>A</strong></td><td>39</td><td><strong>A</strong></td><td>49</td><td><strong>A</strong></td></tr>
+    <tr><td>10</td><td><strong>A</strong></td><td>20</td><td><strong>A</strong></td><td>30</td><td><strong>A</strong></td><td>40</td><td><strong>A</strong></td><td>50</td><td><strong>A</strong></td></tr>
+  </table></div>
+
+  <h3>B. Detaylı Çözümler</h3>
+
+  <details><summary>1–10: Grammar Gap-Filling Çözümleri</summary>
+    <div class="details-body">
+      <div class="answer-box"><span class="label">Soru 1 → A</span>
+        <p><strong>Kural:</strong> Zero conditional — bilimsel gerçek.</p>
+        <p><strong>Clue:</strong> "at sea level" → her zaman geçerli.</p>
+        <p><strong>Adım:</strong> Present + present → <em>heat / boils</em>.</p>
+      </div>
+      <div class="answer-box"><span class="label">Soru 2 → A</span>
+        <p><strong>Kural:</strong> First conditional — "next month".</p>
+        <p><strong>Adım:</strong> present + will → <em>adopts / will gain</em>.</p>
+      </div>
+      <div class="answer-box"><span class="label">Soru 3 → A</span>
+        <p><strong>Kural:</strong> Second conditional — hayali şimdi.</p>
+        <p><strong>Adım:</strong> were / would change.</p>
+      </div>
+      <div class="answer-box"><span class="label">Soru 4 → A</span>
+        <p><strong>Kural:</strong> Third conditional — geçmiş hata.</p>
+        <p><strong>Adım:</strong> had analyzed / wouldn't have made.</p>
+      </div>
+      <div class="answer-box"><span class="label">Soru 5 → A</span>
+        <p><strong>Kural:</strong> Mixed 5a.</p>
+        <p><strong>Clue:</strong> "ten years ago" + "today".</p>
+      </div>
+      <div class="answer-box"><span class="label">Soru 6 → A</span>
+        <p><strong>Kural:</strong> Unless + first.</p>
+        <p><strong>Neden B yanlış:</strong> unless + not = çifte olumsuz.</p>
+      </div>
+      <div class="answer-box"><span class="label">Soru 7 → A</span><p><strong>Kural:</strong> Provided that — resmî şart.</p></div>
+      <div class="answer-box"><span class="label">Soru 8 → A</span>
+        <p><strong>Kural:</strong> Inversion third conditional.</p>
+        <p><strong>Adım:</strong> Had / might have been made.</p>
+      </div>
+      <div class="answer-box"><span class="label">Soru 9 → B</span>
+        <p><strong>Kural:</strong> Had it not been for — geçmiş varsayım.</p>
+        <p><strong>Neden A yanlış:</strong> Were it not for = şimdiki varsayım.</p>
+      </div>
+      <div class="answer-box"><span class="label">Soru 10 → A</span>
+        <p><strong>Kural:</strong> Even if + first conditional.</p>
+      </div>
+    </div>
+  </details>
+
+  <details><summary>11–18: Sentence Completion Çözümleri</summary>
+    <div class="details-body">
+      <div class="answer-box"><span class="label">11 → A</span><p>Mixed 5a: <em>a decade ago</em> + <em>today</em>.</p></div>
+      <div class="answer-box"><span class="label">12 → A</span><p><em>would never have prescribed</em> → <em>Had she known</em>.</p></div>
+      <div class="answer-box"><span class="label">13 → A</span><p>Unless + present passive + will.</p></div>
+      <div class="answer-box"><span class="label">14 → A</span><p>Mixed 5b: kişilik + geçmiş sonuç.</p></div>
+      <div class="answer-box"><span class="label">15 → A</span><p><em>Had they not learned</em> + <em>would not have survived</em>.</p></div>
+      <div class="answer-box"><span class="label">16 → A</span><p>Third conditional.</p></div>
+      <div class="answer-box"><span class="label">17 → A</span><p>Mixed 5a: <em>earlier</em> + <em>today</em>.</p></div>
+      <div class="answer-box"><span class="label">18 → A</span><p>Unless + present + will.</p></div>
+    </div>
+  </details>
+
+  <details><summary>19–24: Closest Meaning Çözümleri</summary>
+    <div class="details-body">
+      <div class="answer-box"><span class="label">19 → A</span><p>Unless = if not.</p></div>
+      <div class="answer-box"><span class="label">20 → A</span><p>Had I known = If I had known.</p></div>
+      <div class="answer-box"><span class="label">21 → A</span><p>But for = if it had not been for (geçmiş).</p></div>
+      <div class="answer-box"><span class="label">22 → A</span><p>Even if = regardless of whether.</p></div>
+      <div class="answer-box"><span class="label">23 → B</span><p>Mixed 5a counterfactual: almadı, değil.</p></div>
+      <div class="answer-box"><span class="label">24 → A</span><p>Only if başta → normal sıraya döndür.</p></div>
+    </div>
+  </details>
+
+  <details><summary>25–30: Translation Çözümleri</summary>
+    <div class="details-body">
+      <div class="answer-box"><span class="label">25 → A</span><p>Mixed 5a.</p></div>
+      <div class="answer-box"><span class="label">26 → A</span><p>Had it not been for = olmasaydı.</p></div>
+      <div class="answer-box"><span class="label">27 → A</span><p>Unless = -mezse.</p></div>
+      <div class="answer-box"><span class="label">28 → A</span><p>Mixed 5b.</p></div>
+      <div class="answer-box"><span class="label">29 → A</span><p>Mixed 5a.</p></div>
+      <div class="answer-box"><span class="label">30 → A</span><p>Only if + inversion.</p></div>
+    </div>
+  </details>
+
+  <details><summary>31–35: Dialogue Çözümleri</summary>
+    <div class="details-body">
+      <div class="answer-box"><span class="label">31 → A</span><p><em>should have started</em> → third conditional.</p></div>
+      <div class="answer-box"><span class="label">32 → A</span><p>Mixed 5a sorusuna mixed 5a cevabı.</p></div>
+      <div class="answer-box"><span class="label">33 → A</span><p>Mixed 5a.</p></div>
+      <div class="answer-box"><span class="label">34 → A</span><p>Second conditional.</p></div>
+      <div class="answer-box"><span class="label">35 → A</span><p>Second conditional.</p></div>
+    </div>
+  </details>
+
+  <details><summary>36–40: Paragraph Çözümleri</summary>
+    <div class="details-body">
+      <div class="answer-box"><span class="label">36 → E</span><p>Olumsuz sonuç + koşul → <em>Unless cities invest...</em></p></div>
+      <div class="answer-box"><span class="label">37 → A</span><p><em>Had he not been</em>.</p></div>
+      <div class="answer-box"><span class="label">38 → A</span><p><em>Unless</em>.</p></div>
+      <div class="answer-box"><span class="label">39 → A</span><p><em>Had any one ... been absent</em>.</p></div>
+      <div class="answer-box"><span class="label">40 → A</span><p><em>Had the press not been invented</em>.</p></div>
+    </div>
+  </details>
+
+  <details><summary>41–45: Cloze Çözümleri</summary>
+    <div class="details-body">
+      <div class="answer-box"><span class="label">41 → B</span><p><em>Had this impact not occurred</em>.</p></div>
+      <div class="answer-box"><span class="label">42 → A</span><p><em>causing</em> (participle).</p></div>
+      <div class="answer-box"><span class="label">43 → A</span><p><em>If they had been larger...</em></p></div>
+      <div class="answer-box"><span class="label">44 → A</span><p><em>if the asteroid had struck</em>.</p></div>
+      <div class="answer-box"><span class="label">45 → A</span><p><em>would have been</em>.</p></div>
+    </div>
+  </details>
+
+  <details><summary>46–50: Reading Çözümleri</summary>
+    <div class="details-body">
+      <div class="answer-box"><span class="label">46 → B</span><p><em>large, expensive office spaces</em>.</p></div>
+      <div class="answer-box"><span class="label">47 → B</span><p><em>would look very different today</em>.</p></div>
+      <div class="answer-box"><span class="label">48 → B</span><p><em>if companies do not address</em> = unless.</p></div>
+      <div class="answer-box"><span class="label">49 → A</span><p><em>might have designed ... better policies</em>.</p></div>
+      <div class="answer-box"><span class="label">50 → A</span><p>Dengeli özet.</p></div>
+    </div>
+  </details>
+
+  <h3>C. Performans Yorumu</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Puan</th><th>Doğru</th><th>Seviye</th><th>Sonraki Adım</th></tr>
+    <tr><td>90–100</td><td>45–50</td><td><strong>Excellent mastery</strong></td><td>Hız + sınav stratejisi; Bölüm 7 zor sorular</td></tr>
+    <tr><td>75–89</td><td>38–44</td><td><strong>Strong</strong></td><td>Mixed + inversion tekrarı (Bölüm 4, Tablo 4, 8)</td></tr>
+    <tr><td>60–74</td><td>30–37</td><td><strong>Developing</strong></td><td>Zaman uyumu; Bölüm 1 temel tipler</td></tr>
+    <tr><td>40–59</td><td>20–29</td><td><strong>Revision needed</strong></td><td>Temel tipler + yasaklar listesi</td></tr>
+    <tr><td>0–39</td><td>0–19</td><td><strong>Foundational</strong></td><td>Tense bilgisi tazele</td></tr>
+  </table></div>
+</section>
+
+<!-- ============ PART 7 ============ -->
+<section class="part" id="part7">
+  <h2>BÖLÜM 7 — Final YDT Stratejisi</h2>
+
+  <h3 id="rules20">20 En Önemli Kural</h3>
+  <ol>
+    <li><strong>Zero</strong> = genel doğru → present + present.</li>
+    <li><strong>First</strong> = gerçek gelecek → present + will.</li>
+    <li><strong>Second</strong> = hayali şimdi → past (were) + would.</li>
+    <li><strong>Third</strong> = geçmiş varsayım → had + V3 / would have + V3.</li>
+    <li><strong>Mixed 5a</strong> = geçmiş → şimdi → had + V3 / would + V1 (+ now).</li>
+    <li><strong>Mixed 5b</strong> = şimdi → geçmiş → past / would have + V3 (+ yesterday).</li>
+    <li>If-clause'ta <em>will</em> yok (nazik rica hariç).</li>
+    <li>If-clause'ta <em>would</em> yok (nazik rica + if only + would hariç).</li>
+    <li><em>Unless</em> = if not; ardından olumlu fiil.</li>
+    <li>Inversion: Had I known = If I had known; Were I you = If I were you; Should you need = If you should need; Were it not for = If it were not for; Had it not been for = If it had not been for.</li>
+    <li><em>But for + noun</em> = if it were not for / had not been for.</li>
+    <li><em>Without + noun</em> = if it were not for.</li>
+    <li><em>Otherwise / or else</em> = if not.</li>
+    <li><em>Even if</em> = olsa bile; <em>even though</em> = rağmen.</li>
+    <li><em>In case</em> = diye; <em>in case of + noun</em>.</li>
+    <li><em>Only if</em> = ancak şartıyla (başta inversion); <em>if only</em> = keşke.</li>
+    <li>Wish + past (şimdi) / past perfect (geçmiş) / would (gelecek).</li>
+    <li>Would rather + V1 / + subject + past / + have + V3.</li>
+    <li>It's high time + subject + past.</li>
+    <li>Modal perfect: could/might/must/should have + V3 anlamı değiştirir.</li>
+  </ol>
+
+  <h3 id="errors15">15 En Sık Öğrenci Hatası</h3>
+  <ol>
+    <li>❌ <em>If it will rain...</em> → ✅ <em>If it rains...</em></li>
+    <li>❌ <em>If I would have known...</em> → ✅ <em>If I had known...</em></li>
+    <li>❌ <em>Unless you don't hurry...</em> → ✅ <em>Unless you hurry...</em></li>
+    <li>❌ <em>If I was you...</em> → ✅ <em>If I were you...</em></li>
+    <li>❌ <em>If she studied, she would have passed.</em> → ✅ <em>If she had studied...</em></li>
+    <li>❌ <em>It's high time you go.</em> → ✅ <em>...you went.</em></li>
+    <li>❌ <em>I would rather you don't smoke.</em> → ✅ <em>...didn't smoke.</em></li>
+    <li>❌ <em>I wish I would have studied.</em> → ✅ <em>I wish I had studied.</em></li>
+    <li>❌ <em>If I had invested in 2015, I would have been rich now.</em> → ✅ <em>...I would be rich now.</em></li>
+    <li>❌ <em>If she were more patient, she wouldn't lose her temper yesterday.</em> → ✅ <em>...wouldn't have lost...</em></li>
+    <li>❌ <em>In case it will rain...</em> → ✅ <em>In case it rains...</em></li>
+    <li>❌ <em>Even though it rains tomorrow, we'll go.</em> → ✅ <em>Even if...</em></li>
+    <li>❌ <em>Only if you study, you can pass.</em> → ✅ <em>Only if you study can you pass.</em></li>
+    <li>❌ <em>But for your help, I would fail yesterday.</em> → ✅ <em>...would have failed...</em></li>
+    <li>❌ <em>Had I would have known...</em> → ✅ <em>Had I known...</em></li>
+  </ol>
+
+  <h3>10 En Aldatıcı Çeldirici Kalıbı</h3>
+  <ol>
+    <li><strong>If-clause'ta will</strong> → doğrudan ele.</li>
+    <li><strong>If-clause'ta would</strong> → doğrudan ele.</li>
+    <li><strong>Zaman uyumsuzluğu</strong> (had + V3 / would V1) → ele.</li>
+    <li><strong>Ters mixed</strong> (had been / wouldn't make) → ele.</li>
+    <li><strong>Çifte olumsuz</strong> (unless + not) → ele.</li>
+    <li><strong>Yanlış bağlaç</strong> (even though + gelecek varsayım) → ele.</li>
+    <li><strong>Inversion eksikliği</strong> (Only if başta, inversion yok) → ele.</li>
+    <li><strong>But for + clause</strong> → ele (but for + noun).</li>
+    <li><strong>Were it not for vs. Had it not been for</strong> → zaman testi.</li>
+    <li><strong>Aşırı genelleme</strong> (all, always, certainly, solely) → ele.</li>
+  </ol>
+
+  <h3>10 En Değerli Tanıma İpucu</h3>
+  <ol>
+    <li><strong>Zaman zarfı</strong> → now/today vs. yesterday/ago.</li>
+    <li><strong>Cümle başında Had/Were/Should</strong> → inversion.</li>
+    <li><strong>would have + V3</strong> → koşul geçmiş.</li>
+    <li><strong>If + had + V3</strong> → sonuç would have + V3 (veya mixed 5a).</li>
+    <li><strong>Unless</strong> → olumlu fiil; not görürsen ele.</li>
+    <li><strong>But for / without + noun</strong> → varsayım.</li>
+    <li><strong>Otherwise / or else</strong> → if not.</li>
+    <li><strong>Even if / even though</strong> → gerçeklik testi.</li>
+    <li><strong>Only if başta</strong> → inversion var mı?</li>
+    <li><strong>Wish / if only / would rather / it's high time</strong> → subjunctive zaman kuralları.</li>
+  </ol>
+
+  <h3>5 Özellikle Zor Soru</h3>
+
+  <div class="q"><span class="qnum">Zor 1</span><div class="stem">___ the committee not approved the proposal when it did, the entire project ___ abandoned before any meaningful progress could be made.</div>
+  <ol class="options"><li>Had / would have been</li><li>If / would be</li><li>Were / would have been</li><li>Should / will be</li><li>Unless / had been</li></ol></div>
+  <div class="answer-box"><span class="label">CEVAP A</span>
+    <p><em>when it did</em> → geçmiş → <em>Had + not + V3</em> → <em>would have been</em> (passive past).</p>
+  </div>
+
+  <div class="q"><span class="qnum">Zor 2</span><div class="stem">If the researchers ___ the long-term effects before approval, thousands of patients ___ unnecessary complications over the past decade.</div>
+  <ol class="options"><li>had investigated / wouldn't have suffered</li><li>investigated / wouldn't suffer</li><li>investigate / won't suffer</li><li>had investigated / wouldn't suffer</li><li>would investigate / hadn't suffered</li></ol></div>
+  <div class="answer-box"><span class="label">CEVAP A</span>
+    <p>Geçmiş koşul + geçmiş sonuç → third conditional.</p>
+  </div>
+
+  <div class="q"><span class="qnum">Zor 3</span><div class="stem">Had it not been for the unprecedented cooperation between the two countries' intelligence agencies, the terrorist plot ___ discovered and neutralized in time.</div>
+  <ol class="options"><li>would never have been</li><li>would never be</li><li>had never been</li><li>will never be</li><li>has never been</li></ol></div>
+  <div class="answer-box"><span class="label">CEVAP A</span>
+    <p><em>Had it not been for</em> → geçmiş varsayım → <em>would never have been discovered</em>.</p>
+  </div>
+
+  <div class="q"><span class="qnum">Zor 4</span><div class="stem">Were the government to introduce the proposed tax reforms without adequate preparation, the economic consequences ___ far more severe than those ___ during the previous crisis.</div>
+  <ol class="options"><li>would be / experienced</li><li>will be / experiencing</li><li>would have been / experienced</li><li>are / experience</li><li>had been / experienced</li></ol></div>
+  <div class="answer-box"><span class="label">CEVAP A</span>
+    <p><em>Were + subject + to + V1</em> → düşük olasılık gelecek → <em>would + V1</em>.</p>
+  </div>
+
+  <div class="q"><span class="qnum">Zor 5</span><div class="stem">The historian argues that, ___ the Roman Empire not expanded so rapidly, its administrative structures ___ capable of managing such vast territories, and the empire ___ far earlier than it did.</div>
+  <ol class="options"><li>had / might have been / might have collapsed</li><li>if / would be / collapsed</li><li>were / had been / would collapse</li><li>should / would have been / collapses</li><li>unless / were / would have collapsed</li></ol></div>
+  <div class="answer-box"><span class="label">CEVAP A</span>
+    <p><em>Had the Roman Empire not expanded</em> → inversion; sonuçlar <em>might have + V3</em>.</p>
+  </div>
+
+  <h3>7 Günlük Tekrar Planı</h3>
+  <div class="card-grid">
+    <div class="card"><h5>Gün 1 — Temel Tipler</h5><p>Zero, first, second, third. Tablo 1 ve 3. Her tipten 5 cümle.</p></div>
+    <div class="card"><h5>Gün 2 — Mixed</h5><p>5a ve 5b. Tablo 4. 10 mixed cümle.</p></div>
+    <div class="card"><h5>Gün 3 — Inversion</h5><p>Had / Were / Should. Tablo 8. 10 cümle.</p></div>
+    <div class="card"><h5>Gün 4 — Bağlaçlar</h5><p>Unless, even if, in case, only if, but for. Tablo 5, 7.</p></div>
+    <div class="card"><h5>Gün 5 — Subjunctive</h5><p>Wish, if only, would rather, it's time. Tablo 10.</p></div>
+    <div class="card"><h5>Gün 6 — Mock Sınav</h5><p>50 soru, 65 dakika. Bölüm 6 ile karşılaştır.</p></div>
+    <div class="card"><h5>Gün 7 — Final</h5><p>Cheat sheet 3 kez. 20 kural + 15 hata. 5 zor soru.</p></div>
+  </div>
+
+  <h3 id="checklist">Sınav Günü — 1 Dakikalık Kontrol Listesi</h3>
+  <div class="cheatsheet">
+    <ol style="font-size:15px; line-height:1.8">
+      <li><strong>Zaman zarfını bul</strong> → now / yesterday / tomorrow / ago.</li>
+      <li><strong>Cümle başında büyük harf kontrol et</strong> → Had / Were / Should?</li>
+      <li><strong>If-clause'ta will/would var mı?</strong> → Varsa ele.</li>
+      <li><strong>Unless + not var mı?</strong> → Çifte olumsuz → ele.</li>
+      <li><strong>Sonuçta would have + V3 var mı?</strong> → Koşul geçmiş olmalı.</li>
+      <li><strong>Bağlacın anlamını test et</strong> → unless / even if / in case / only if / if only.</li>
+      <li><strong>Zaman uyumunu kontrol et</strong> → mixed mi?</li>
+      <li><strong>Aşırı genellemeleri ele</strong> → all, always, certainly, solely.</li>
+      <li><strong>Kalan iki seçeneği bağlamla karşılaştır.</strong></li>
+      <li><strong>Son karar</strong> → En doğal ve en az zorlama olan seçenek.</li>
+    </ol>
+  </div>
+
+  <div class="note" style="margin-top:32px">
+    <strong>Son söz:</strong> Conditionals, bilenin kaçırmadığı ama bilmeyenin sürekli karıştırdığı bir konudur. Sınavda conditional sorusu gördüğünde panik yapma — <strong>zaman zarfı → fiil formu → bağlaç → bağlam</strong> sırasını uygula ve geç. Başarılar! 🎓
+  </div>
+</section>
+
+</div>
+
+<script>
+// Global progress
+function updateProgress(){
+  const all = document.querySelectorAll('.iquiz');
+  const total = all.length;
+  const answered = document.querySelectorAll('.ioptions.answered').length;
+  const correct = document.querySelectorAll('.ioptions.answered[data-result="true"]').length;
+
+  const stat = document.getElementById('gp-stat');
+  const fill = document.getElementById('gp-fill');
+  if (stat) stat.innerHTML = '<strong>' + answered + '</strong> / ' + total + ' tamamlandı • <strong>' + correct + '</strong> doğru';
+  if (fill) fill.style.width = total ? (answered / total * 100) + '%' : '0%';
+}
+
+// Click handler
+document.addEventListener('click', function (e) {
+  // Option click
+  const btn = e.target.closest('.ioptions button');
+  if (btn) {
+    const opts = btn.parentElement;
+    if (opts.classList.contains('answered')) return;
+
+    opts.classList.add('answered');
+    const isCorrect = btn.dataset.correct === 'true';
+    btn.classList.add(isCorrect ? 'correct' : 'wrong');
+
+    if (!isCorrect) {
+      opts.querySelectorAll('button').forEach(function (b) {
+        if (b.dataset.correct === 'true') b.classList.add('correct');
+      });
+      opts.dataset.result = 'false';
+    } else {
+      opts.dataset.result = 'true';
+    }
+
+    const ans = opts.closest('.iquiz').querySelector('.ianswer');
+    if (ans) ans.classList.add('show');
+
+    updateProgress();
+    return;
+  }
+
+  // Per-quiz reset
+  const reset = e.target.closest('.ireset');
+  if (reset) {
+    const quiz = reset.closest('.iquiz');
+    const opts = quiz.querySelector('.ioptions');
+    opts.classList.remove('answered');
+    delete opts.dataset.result;
+    opts.querySelectorAll('button').forEach(b => b.classList.remove('correct', 'wrong'));
+    const ans = quiz.querySelector('.ianswer');
+    if (ans) ans.classList.remove('show');
+    updateProgress();
+    return;
+  }
+
+  // Global reset
+  if (e.target.id === 'gp-reset') {
+    document.querySelectorAll('.ioptions').forEach(opts => {
+      opts.classList.remove('answered');
+      delete opts.dataset.result;
+      opts.querySelectorAll('button').forEach(b => b.classList.remove('correct', 'wrong'));
+    });
+    document.querySelectorAll('.ianswer').forEach(a => a.classList.remove('show'));
+    updateProgress();
+  }
+});
+
+document.addEventListener('DOMContentLoaded', updateProgress);
+
+// Open all <details> when printing
+window.addEventListener('beforeprint', () => {
+  document.querySelectorAll('details').forEach(d => d.open = true);
+});
+</script>
+</body>
+</html>
